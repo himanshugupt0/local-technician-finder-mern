@@ -44,11 +44,13 @@ const TechnicianProfileEdit = () => {
       }
 
       try {
-        const res = await fetch('/api/profile/technician/me', {
+        // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
+        const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/profile/technician/me`, {
           headers: {
             'x-auth-token': componentToken,
           },
         });
+        // --- END UPDATED FETCH CALL ---
         const data = await res.json();
 
         if (res.ok) {
@@ -63,13 +65,11 @@ const TechnicianProfileEdit = () => {
             isAvailable: data.isAvailable !== undefined ? data.isAvailable : true,
           });
         } else {
-          // Replaced setError with showToast
-          showToast(data.msg || 'Failed to fetch technician profile data.', 'danger');
+          showToast(data.msg || 'Failed to fetch technician profile data.', 'danger'); // <--- UPDATED
         }
       } catch (err) {
         console.error('Frontend fetch tech profile for edit error:', err);
-        // Replaced setError with showToast
-        showToast('Could not connect to the server or retrieve your profile data.', 'danger');
+        showToast('Could not connect to the server or retrieve your profile data.', 'danger'); // <--- UPDATED
       } finally {
         setDataLoading(false);
       }
@@ -79,11 +79,11 @@ const TechnicianProfileEdit = () => {
       fetchTechnicianProfile();
     } else if (!authLoading && (!componentToken || userRole !== 'technician')) {
       setDataLoading(false);
-      // This alert is specifically handled in JSX, so no showToast here directly.
-      // The JSX conditional rendering for Access Denied uses the 'error' prop which will be null now.
-      // So we should just let the conditional return path handle it.
+      // Error is now handled by showToast, but still keeping this path for conditional rendering
+      // showToast("Access Denied. Please log in as a technician to edit your profile.", 'danger'); // Optional: show toast here
     }
-  }, [authLoading, componentToken, userRole, navigate, showToast]); // Added showToast to dependencies
+  }, [authLoading, componentToken, userRole, navigate, showToast]);
+
 
   const onChange = e => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -105,28 +105,28 @@ const TechnicianProfileEdit = () => {
     setFormSubmitting(true);
 
     if (formData.servicesOffered.length === 0) {
-        showToast('Please select at least one service offered.', 'danger'); // <--- UPDATED
+        showToast('Please select at least one service offered.', 'danger');
         setFormSubmitting(false);
         return;
     }
     if (formData.availability.length === 0) {
-        showToast('Please select at least one available day.', 'danger'); // <--- UPDATED
+        showToast('Please select at least one available day.', 'danger');
         setFormSubmitting(false);
         return;
     }
 
     if (!componentToken || userRole !== 'technician') {
-      showToast('Authentication required to update profile.', 'danger'); // <--- UPDATED
+      showToast('Authentication required to update profile.', 'danger');
       setFormSubmitting(false);
       return;
     }
 
     try {
-      const res = await fetch('/api/profile/technician', {
+      // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/profile/technician`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-auth-token': componentToken,
         },
         body: JSON.stringify({
           ...formData,
@@ -134,17 +134,18 @@ const TechnicianProfileEdit = () => {
           serviceAreas: formData.serviceAreas.split(',').map(s => s.trim()).filter(s => s.length > 0)
         }),
       });
+      // --- END UPDATED FETCH CALL ---
 
       const data = await res.json();
 
       if (res.ok) {
-        showToast('Profile updated successfully!', 'success'); // <--- UPDATED
+        showToast('Profile updated successfully!', 'success');
       } else {
-        showToast(data.msg || 'Failed to update profile.', 'danger'); // <--- UPDATED
+        showToast(data.msg || 'Failed to update profile.', 'danger');
       }
     } catch (err) {
       console.error('Frontend update tech profile error:', err);
-      showToast('Server error during profile update. Please try again.', 'danger'); // <--- UPDATED
+      showToast('Server error during profile update. Please try again.', 'danger');
     } finally {
       setFormSubmitting(false);
     }
@@ -152,6 +153,7 @@ const TechnicianProfileEdit = () => {
 
 
   // --- Conditional Rendering for different states ---
+
   if (authLoading) {
     return (
       <Container className="mt-5 text-center">
@@ -167,7 +169,6 @@ const TechnicianProfileEdit = () => {
     return (
       <Container className="mt-5">
         <Alert variant="danger" className="text-center">
-          {/* No specific error state here, message is static */}
           Access Denied. Please log in as a technician to edit your profile.
         </Alert>
         <div className="text-center mt-3">
@@ -188,17 +189,14 @@ const TechnicianProfileEdit = () => {
     );
   }
 
-  // No longer need 'if (error)' block here, as errors trigger toasts and don't block render.
+  // Replaced 'if (error)' block because errors now trigger toasts
   // If a fetch error occurs, a toast will show, but the form will still try to render with its current data.
-
 
   return (
     <Container className="mt-5">
       <Row className="justify-content-md-center">
         <Col md={8}>
           <h2 className="text-center mb-4">Edit Your Technician Profile</h2>
-          {/* Removed message Alert as toasts will handle messages */}
-          {/* {message && <Alert variant={messageType}>{message}</Alert>} */}
           <Form onSubmit={onSubmit}>
             <Form.Group className="mb-3" controlId="contactNumber">
               <Form.Label>Contact Number</Form.Label>

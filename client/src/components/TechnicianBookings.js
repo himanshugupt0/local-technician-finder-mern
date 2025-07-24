@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // <--- YEH LINE BILKUL SAHI HAI AB
 import { Container, Row, Col, Card, Alert, Spinner, ListGroup, Badge, Button, Dropdown } from 'react-bootstrap';
-import { Link } from 'react-router-dom'; // <--- Link imported for the Edit Profile button
+import { Link } from 'react-router-dom';
 
 const TechnicianBookings = () => { // This component acts as the Technician Dashboard
   const [bookings, setBookings] = useState([]);
@@ -24,10 +24,8 @@ const TechnicianBookings = () => { // This component acts as the Technician Dash
     }
 
     try {
-      const res = await fetch('/api/bookings/me', {
-        headers: {
-          'x-auth-token': token, // Send the technician's JWT token
-        },
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/bookings/me`, {
+        headers: { 'x-auth-token': token },
       });
       const data = await res.json();
 
@@ -51,7 +49,6 @@ const TechnicianBookings = () => { // This component acts as the Technician Dash
     fetchTechnicianBookings();
   }, [token, userRole]);
 
-  // Handle updating booking status
   const handleStatusChange = async (bookingId, newStatus) => {
     setMessage('');
     setMessageType('');
@@ -63,7 +60,7 @@ const TechnicianBookings = () => { // This component acts as the Technician Dash
     }
 
     try {
-      const res = await fetch(`/api/bookings/${bookingId}/status`, {
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/bookings/${bookingId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -76,8 +73,7 @@ const TechnicianBookings = () => { // This component acts as the Technician Dash
       if (res.ok) {
         setMessage(`Booking status updated to "${newStatus}"!`);
         setMessageType('success');
-        // Re-fetch bookings to update the list
-        fetchTechnicianBookings();
+        fetchTechnicianBookings(); // Re-fetch bookings to update the list
       } else {
         setMessage(data.msg || 'Failed to update booking status.');
         setMessageType('danger');
@@ -124,57 +120,57 @@ const TechnicianBookings = () => { // This component acts as the Technician Dash
         <Row>
           {bookings.map((booking) => (
             <Col md={6} lg={4} className="mb-4" key={booking._id}>
-              <Card>
-                <Card.Body>
-                  <Card.Title>Service: {booking.service}</Card.Title>
-                  <Card.Subtitle className="mb-2 text-muted">
-                    Booked by: {booking.user ? booking.user.name : 'Unknown User'}
-                  </Card.Subtitle>
-                  <ListGroup variant="flush">
-                    <ListGroup.Item>
-                      <strong>Date:</strong> {new Date(booking.bookingDate).toLocaleDateString()}
-                    </ListGroup.Item>
-                    <ListGroup.Item>
-                      <strong>Time:</strong> {booking.bookingTime}
-                    </ListGroup.Item>
-                    <ListGroup.Item>
-                      <strong>Status:</strong>{' '}
-                      <Badge bg={
-                        booking.status === 'confirmed' ? 'success' :
-                        booking.status === 'pending' ? 'warning' :
-                        booking.status === 'completed' ? 'primary' :
-                        'danger'
-                      }>
-                        {booking.status}
-                      </Badge>
-                    </ListGroup.Item>
-                    {booking.notes && (
-                      <ListGroup.Item>
-                        <strong>Notes:</strong> {booking.notes}
-                      </ListGroup.Item>
-                    )}
-                    <ListGroup.Item>
-                      <strong>Booked On:</strong> {new Date(booking.createdAt).toLocaleDateString()}
-                    </ListGroup.Item>
-                  </ListGroup>
-                  <Dropdown className="mt-3">
-                    <Dropdown.Toggle variant="secondary" id={`dropdown-status-${booking._id}`}>
-                      Update Status
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu>
-                      <Dropdown.Item onClick={() => handleStatusChange(booking._id, 'confirmed')}>Confirm</Dropdown.Item>
-                      <Dropdown.Item onClick={() => handleStatusChange(booking._id, 'completed')}>Complete</Dropdown.Item>
-                      <Dropdown.Item onClick={() => handleStatusChange(booking._id, 'cancelled')}>Cancel</Dropdown.Item>
-                    </Dropdown.Menu>
-                  </Dropdown>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      )}
-    </Container>
-  );
-};
+                  <Card>
+                    <Card.Body>
+                      <Card.Title>Service: {booking.service}</Card.Title>
+                      <Card.Subtitle className="mb-2 text-muted">
+                        Booked by: {booking.user ? booking.user.name : 'Unknown User'}
+                      </Card.Subtitle>
+                      <ListGroup variant="flush">
+                        <ListGroup.Item>
+                          <strong>Date:</strong> {new Date(booking.bookingDate).toLocaleDateString()}
+                        </ListGroup.Item>
+                        <ListGroup.Item>
+                          <strong>Time:</strong> {booking.bookingTime}
+                        </ListGroup.Item>
+                        <ListGroup.Item>
+                          <strong>Status:</strong>{' '}
+                          <Badge bg={
+                            booking.status === 'confirmed' ? 'success' :
+                            booking.status === 'pending' ? 'warning' :
+                            booking.status === 'completed' ? 'primary' :
+                            'danger'
+                          }>
+                            {booking.status}
+                          </Badge>
+                        </ListGroup.Item>
+                        {booking.notes && (
+                          <ListGroup.Item>
+                            <strong>Notes:</strong> {booking.notes}
+                          </ListGroup.Item>
+                        )}
+                        <ListGroup.Item>
+                          <strong>Booked On:</strong> {new Date(booking.createdAt).toLocaleDateString()}
+                        </ListGroup.Item>
+                      </ListGroup>
+                      <Dropdown className="mt-3">
+                        <Dropdown.Toggle variant="secondary" id={`dropdown-status-${booking._id}`}>
+                          Update Status
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu>
+                          <Dropdown.Item onClick={() => handleStatusChange(booking._id, 'confirmed')}>Confirm</Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleStatusChange(booking._id, 'completed')}>Complete</Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleStatusChange(booking._id, 'cancelled')}>Cancel</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          )}
+        </Container>
+      );
+    };
 
-export default TechnicianBookings;
+    export default TechnicianBookings;

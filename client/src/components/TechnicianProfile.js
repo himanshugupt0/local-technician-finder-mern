@@ -5,14 +5,14 @@ import Rating from 'react-rating';
 import { FaStar, FaRegStar } from 'react-icons/fa';
 
 import StarRatingInput from './StarRatingInput';
-import { useToast } from '../context/ToastContext'; // <--- NEW IMPORT
+import { useToast } from '../context/ToastContext';
 
 const TechnicianProfile = () => {
   const { id } = useParams();
   const [technician, setTechnician] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // Keep this error for initial page load failure
+  const [error, setError] = useState(null);
 
   const [bookingFormData, setBookingFormData] = useState({
     bookingDate: '',
@@ -20,40 +20,36 @@ const TechnicianProfile = () => {
     service: '',
     notes: ''
   });
-  const [bookingLoading, setBookingLoading] = useState(false); // For booking form loading
-  // Removed bookingMessage and bookingMessageType
-  // const [bookingMessage, setBookingMessage] = useState('');
-  // const [bookingMessageType, setBookingMessageType] = useState('');
+  const [bookingLoading, setBookingLoading] = useState(false);
 
   const [reviewFormData, setReviewFormData] = useState({
     rating: 0,
     comment: ''
   });
-  // Removed reviewMessage and reviewMessageType
-  // const [reviewMessage, setReviewMessage] = useState('');
-  // const [reviewMessageType, setReviewMessageType] = useState('');
-  const [reviewSubmitting, setReviewSubmitting] = useState(false); // <--- NEW STATE for review form loading
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
-  // Removed global message and messageType
-  // const [message, setMessage] = useState('');
-  // const [messageType, setMessageType] = useState('');
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('');
 
   const [hasCompletedBookingWithTech, setHasCompletedBookingWithTech] = useState(false);
+
 
   const userRole = localStorage.getItem('userRole');
   const token = localStorage.getItem('token');
   const userId = localStorage.getItem('userId');
-  const { showToast } = useToast(); // <--- Use the showToast function
+  const { showToast } = useToast();
 
   // Function to fetch technician details, reviews, AND user's bookings
   const fetchTechnicianAndReviews = async () => {
     setLoading(true);
     setError(null);
-    // setMessage(''); // Removed
+    setMessage('');
     setHasCompletedBookingWithTech(false);
 
     try {
-      const techRes = await fetch(`/api/technicians/${id}`);
+      // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URLs ---
+      // Fetch technician profile
+      const techRes = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/technicians/${id}`);
       const techData = await techRes.json();
 
       if (!techRes.ok) {
@@ -66,7 +62,8 @@ const TechnicianProfile = () => {
         setBookingFormData(prev => ({ ...prev, service: techData.servicesOffered[0] }));
       }
 
-      const reviewRes = await fetch(`/api/reviews/${id}`);
+      // Fetch reviews for this technician
+      const reviewRes = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/reviews/${id}`);
       const reviewData = await reviewRes.json();
 
       if (reviewRes.ok) {
@@ -77,7 +74,7 @@ const TechnicianProfile = () => {
       }
 
       if (userRole === 'user' && token) {
-        const bookingsRes = await fetch('/api/bookings/me', {
+        const bookingsRes = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/bookings/me`, {
           headers: { 'x-auth-token': token }
         });
         const bookingsData = await bookingsRes.json();
@@ -91,10 +88,11 @@ const TechnicianProfile = () => {
           console.error('Failed to fetch user bookings for review check:', bookingsData.msg || 'Unknown error');
         }
       }
+      // --- END UPDATED FETCH CALLS ---
 
     } catch (err) {
       console.error('Frontend fetch error (tech or reviews):', err);
-      setError('Could not connect to the server or retrieve data.'); // This error prevents rendering the page
+      setError('Could not connect to the server or retrieve data.');
     } finally {
       setLoading(false);
     }
@@ -104,7 +102,7 @@ const TechnicianProfile = () => {
     if (id) {
       fetchTechnicianAndReviews();
     }
-  }, [id, userRole, token]); // Added userRole and token as dependencies
+  }, [id, userRole, token]);
 
   const handleBookingChange = e => {
     setBookingFormData({ ...bookingFormData, [e.target.name]: e.target.value });
@@ -112,33 +110,32 @@ const TechnicianProfile = () => {
 
   const handleBookingSubmit = async e => {
     e.preventDefault();
-    // Removed setBookingMessage('');
     setBookingLoading(true);
 
     if (!token) {
-      showToast('Please log in to book a technician.', 'danger'); // <--- UPDATED
+      showToast('Please log in to book a technician.', 'danger');
       setBookingLoading(false);
       return;
     }
 
     if (userRole !== 'user') {
-      showToast('Only regular users can book technicians.', 'danger'); // <--- UPDATED
+      showToast('Only regular users can book technicians.', 'danger');
       setBookingLoading(false);
       return;
     }
 
     if (!bookingFormData.bookingDate || !bookingFormData.bookingTime || !bookingFormData.service) {
-        showToast('Please select a service, date, and time.', 'danger'); // <--- UPDATED
+        showToast('Please select a service, date, and time.', 'danger');
         setBookingLoading(false);
         return;
     }
 
     try {
-      const res = await fetch('/api/bookings', {
+      // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/bookings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-auth-token': token
         },
         body: JSON.stringify({
           technicianId: technician._id,
@@ -148,18 +145,19 @@ const TechnicianProfile = () => {
           notes: bookingFormData.notes
         }),
       });
+      // --- END UPDATED FETCH CALL ---
 
       const data = await res.json();
 
       if (res.ok) {
-        showToast('Booking successfully created! Status: Pending.', 'success'); // <--- UPDATED
+        showToast('Booking successfully created! Status: Pending.', 'success');
         setBookingFormData({ bookingDate: '', bookingTime: '', service: technician.servicesOffered[0] || '', notes: '' });
       } else {
-        showToast(data.msg || 'Failed to create booking.', 'danger'); // <--- UPDATED
+        showToast(data.msg || 'Failed to create booking.', 'danger');
       }
     } catch (err) {
       console.error('Frontend booking error:', err);
-      showToast('Server error during booking. Please try again later.', 'danger'); // <--- UPDATED
+      showToast('Server error during booking. Please try again later.', 'danger');
     } finally {
       setBookingLoading(false);
     }
@@ -175,31 +173,30 @@ const TechnicianProfile = () => {
 
   const handleReviewSubmit = async e => {
     e.preventDefault();
-    // Removed setReviewMessage('');
-    setReviewSubmitting(true); // <--- Set review submitting true
+    setReviewSubmitting(true);
 
     if (!token) {
-        showToast('Please log in to submit a review.', 'danger'); // <--- UPDATED
+        showToast('Please log in to submit a review.', 'danger');
         setReviewSubmitting(false);
         return;
     }
     if (userRole !== 'user') {
-        showToast('Only regular users can submit reviews.', 'danger'); // <--- UPDATED
+        showToast('Only regular users can submit reviews.', 'danger');
         setReviewSubmitting(false);
         return;
     }
     if (reviewFormData.rating === 0) {
-        showToast('Please select a rating (1-5 stars).', 'danger'); // <--- UPDATED
+        showToast('Please select a rating (1-5 stars).', 'danger');
         setReviewSubmitting(false);
         return;
     }
 
     try {
-      const res = await fetch('/api/reviews', {
+      // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-auth-token': token
         },
         body: JSON.stringify({
           technicianId: technician._id,
@@ -207,21 +204,22 @@ const TechnicianProfile = () => {
           comment: reviewFormData.comment
         }),
       });
+      // --- END UPDATED FETCH CALL ---
 
       const data = await res.json();
 
       if (res.ok) {
-        showToast('Review submitted successfully!', 'success'); // <--- UPDATED
+        showToast('Review submitted successfully!', 'success');
         fetchTechnicianAndReviews();
         setReviewFormData({ rating: 0, comment: '' });
       } else {
-        showToast(data.msg || 'Failed to submit review.', 'danger'); // <--- UPDATED
+        showToast(data.msg || 'Failed to submit review.', 'danger');
       }
     } catch (err) {
       console.error('Frontend review submission error:', err);
-      showToast('Server error during review submission. Please try again.', 'danger'); // <--- UPDATED
+      showToast('Server error during review submission. Please try again.', 'danger');
     } finally {
-      setReviewSubmitting(false); // <--- Set review submitting false
+      setReviewSubmitting(false);
     }
   };
 
@@ -236,7 +234,7 @@ const TechnicianProfile = () => {
     );
   }
 
-  if (error) { // This `error` state is for initial page load errors, not form submissions
+  if (error) {
     return (
       <Container className="mt-5">
         <Alert variant="danger">{error}</Alert>
@@ -339,8 +337,7 @@ const TechnicianProfile = () => {
             <Card className="mt-4">
               <Card.Header as="h4">Book This Technician</Card.Header>
               <Card.Body>
-                {/* Removed bookingMessage Alert as toasts handle messages */}
-                {/* {bookingMessage && <Alert variant={bookingMessageType}>{bookingMessage}</Alert>} */}
+                {bookingMessage && <Alert variant={bookingMessageType}>{bookingMessage}</Alert>}
                 <Form onSubmit={handleBookingSubmit}>
                   <Form.Group className="mb-3" controlId="serviceSelect">
                     <Form.Label>Select Service</Form.Label>
@@ -428,8 +425,7 @@ const TechnicianProfile = () => {
           <Card className="mt-4">
             <Card.Header as="h4">Reviews ({technician.reviewCount})</Card.Header>
             <Card.Body>
-              {/* Removed reviewMessage Alert as toasts handle messages */}
-              {/* {reviewMessage && <Alert variant={reviewMessageType}>{reviewMessage}</Alert>} */}
+              {reviewMessage && <Alert variant={reviewMessageType}>{reviewMessage}</Alert>}
 
               {/* Review Submission Form */}
               {canSubmitReview ? (
@@ -443,7 +439,7 @@ const TechnicianProfile = () => {
                         size={30}
                         activeColor="#ffd700"
                         count={5}
-                        disabled={reviewSubmitting} // <--- Disable while submitting
+                        disabled={reviewSubmitting}
                     />
                   </Form.Group>
 
@@ -456,11 +452,11 @@ const TechnicianProfile = () => {
                       name="comment"
                       value={reviewFormData.comment}
                       onChange={handleReviewChange}
-                      disabled={reviewSubmitting} // <--- Disable while submitting
+                      disabled={reviewSubmitting}
                     />
                   </Form.Group>
 
-                  <Button variant="info" type="submit" disabled={reviewSubmitting}> {/* <--- Disable button while submitting */}
+                  <Button variant="info" type="submit" disabled={reviewSubmitting}>
                     {reviewSubmitting ? (
                         <>
                             <Spinner

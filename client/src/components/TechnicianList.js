@@ -1,21 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import useDebounce from '../hooks/useDebounce'; // <--- NEW IMPORT: Import the useDebounce hook
+import useDebounce from '../hooks/useDebounce';
 
 const TechnicianList = () => {
   const [technicians, setTechnicians] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedService, setSelectedService] = useState('');
+  const [searchTermLocation, setSearchTermLocation] = useState('');
+  const [searchTermServiceArea, setSearchTermServiceArea] = useState('');
 
-  // --- UPDATED: Use separate states for immediate input and debounced values ---
-  const [searchTermLocation, setSearchTermLocation] = useState(''); // Immediate input for location
-  const [searchTermServiceArea, setSearchTermServiceArea] = useState(''); // Immediate input for service area
-
-  const debouncedSearchLocation = useDebounce(searchTermLocation, 500); // <--- DEBOUNCED: 500ms delay
-  const debouncedSearchServiceArea = useDebounce(searchTermServiceArea, 500); // <--- DEBOUNCED: 500ms delay
-  // --- END UPDATED STATE ---
+  const debouncedSearchLocation = useDebounce(searchTermLocation, 500);
+  const debouncedSearchServiceArea = useDebounce(searchTermServiceArea, 500);
 
   const [message, setMessage] = useState('');
 
@@ -31,29 +28,28 @@ const TechnicianList = () => {
     setError(null);
     setMessage('');
 
-    let url = '/api/technicians';
+    let url = '/api/technicians'; // Default URL to get all verified technicians
     const params = new URLSearchParams();
 
     if (selectedService) {
       params.append('service', selectedService);
     }
-    // --- UPDATED: Use debounced values for API call ---
-    if (debouncedSearchLocation) {
-      params.append('location', debouncedSearchLocation);
+    if (searchLocation) {
+      params.append('location', searchLocation);
     }
-    if (debouncedSearchServiceArea) {
-      params.append('serviceArea', debouncedSearchServiceArea);
+    if (searchServiceArea) {
+      params.append('serviceArea', searchServiceArea);
     }
-    // --- END UPDATED API PARAMS ---
 
-    const isSearchQuery = selectedService || debouncedSearchLocation || debouncedSearchServiceArea;
+    const isSearchQuery = selectedService || searchLocation || searchServiceArea;
 
     if (isSearchQuery) {
         url = `/api/technicians/search?${params.toString()}`;
     }
 
     try {
-      const res = await fetch(url);
+      // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}${url}`);
       const data = await res.json();
 
       if (res.ok) {
@@ -80,10 +76,9 @@ const TechnicianList = () => {
     }
   };
 
-  // --- UPDATED: useEffect dependencies to use debounced values ---
   useEffect(() => {
     fetchTechnicians();
-  }, [selectedService, debouncedSearchLocation, debouncedSearchServiceArea]); // Fetch when debounced values change
+  }, [selectedService, debouncedSearchLocation, debouncedSearchServiceArea]);
 
   const handleSearchSubmit = (e) => {
       e.preventDefault();
@@ -112,7 +107,6 @@ const TechnicianList = () => {
     <Container className="mt-5">
       <h2 className="text-center mb-4">Our Verified Technicians</h2>
 
-      {/* Search/Filter Form */}
       <Form onSubmit={handleSearchSubmit} className="mb-4">
         <Row className="align-items-end">
           <Col md={4} className="mb-3">
@@ -135,7 +129,6 @@ const TechnicianList = () => {
               <Form.Control
                 type="text"
                 placeholder="e.g., Ludhiana"
-                // --- UPDATED: Bind to searchTermLocation, not debounced ---
                 value={searchTermLocation}
                 onChange={(e) => setSearchTermLocation(e.target.value)}
               />
@@ -147,7 +140,6 @@ const TechnicianList = () => {
               <Form.Control
                 type="text"
                 placeholder="e.g., Model Town"
-                // --- UPDATED: Bind to searchTermServiceArea, not debounced ---
                 value={searchTermServiceArea}
                 onChange={(e) => setSearchTermServiceArea(e.target.value)}
               />
@@ -156,8 +148,8 @@ const TechnicianList = () => {
           <Col xs={12} className="text-center mb-3">
               <Button variant="outline-secondary" onClick={() => {
                   setSelectedService('');
-                  setSearchTermLocation(''); // Clear immediate input
-                  setSearchTermServiceArea(''); // Clear immediate input
+                  setSearchTermLocation('');
+                  setSearchTermServiceArea('');
               }} className="me-2">
                   Clear All Filters
               </Button>

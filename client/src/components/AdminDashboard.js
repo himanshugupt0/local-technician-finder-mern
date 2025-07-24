@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Alert, Spinner, Button, Badge, Tab, Tabs, Dropdown } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext'; // <--- NEW IMPORT
 
 const AdminDashboard = () => {
     const [key, setKey] = useState('unverifiedTechnicians'); // State for active tab
@@ -8,14 +9,15 @@ const AdminDashboard = () => {
     const [allTechnicians, setAllTechnicians] = useState([]); // State for all technicians
     const [allUsers, setAllUsers] = useState([]); // State for all users
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [message, setMessage] = useState('');
+    const [error, setError] = useState(null); // For initial page load error
+    const [message, setMessage] = useState(''); // For info messages like "No technicians found"
     const [messageType, setMessageType] = useState('');
 
     const token = localStorage.getItem('token');
     const userRole = localStorage.getItem('userRole');
-    const currentUserId = localStorage.getItem('userId'); // Get current logged-in admin's ID
+    const currentUserId = localStorage.getItem('userId');
     const navigate = useNavigate();
+    const { showToast } = useToast(); // <--- Use the showToast function
 
     // Function to fetch data based on active tab
     const fetchData = async () => {
@@ -24,7 +26,8 @@ const AdminDashboard = () => {
         setMessage('');
 
         if (!token || userRole !== 'admin') {
-            setError('Access Denied. You must be logged in as an administrator.');
+            // setError('Access Denied. You must be logged in as an administrator.'); // Replaced by toast
+            showToast('Access Denied. You must be logged in as an administrator.', 'danger'); // <--- UPDATED
             setLoading(false);
             setTimeout(() => navigate('/login'), 2000);
             return;
@@ -32,13 +35,17 @@ const AdminDashboard = () => {
 
         try {
             if (key === 'unverifiedTechnicians' || key === 'allTechnicians') {
-                // Fetch all technicians (verified or not for 'allTechnicians' tab)
-                const techRes = await fetch(key === 'unverifiedTechnicians' ? '/api/admin/unverified-technicians' : '/api/admin/all-technicians', {
-                    headers: { 'x-auth-token': token },
-                });
+                // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
+                const techRes = await fetch(
+                    `${process.env.REACT_APP_API_BASE_URL}${key === 'unverifiedTechnicians' ? '/api/admin/unverified-technicians' : '/api/admin/all-technicians'}`,
+                    {
+                        headers: { 'x-auth-token': token },
+                    }
+                );
                 const techData = await techRes.json();
                 if (!techRes.ok) {
-                    setError(techData.msg || `Failed to fetch ${key} data.`);
+                    // setError(techData.msg || `Failed to fetch ${key} data.`); // Replaced by toast
+                    showToast(techData.msg || `Failed to fetch ${key} data.`, 'danger'); // <--- UPDATED
                 } else {
                     if (key === 'unverifiedTechnicians') {
                         setUnverifiedTechnicians(techData);
@@ -49,20 +56,22 @@ const AdminDashboard = () => {
             }
 
             if (key === 'allUsers') {
-                // Fetch all users
-                const userRes = await fetch('/api/admin/users', {
+                // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
+                const userRes = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/admin/users`, {
                     headers: { 'x-auth-token': token },
                 });
                 const userData = await userRes.json();
                 if (!userRes.ok) {
-                    setError(userData.msg || 'Failed to fetch users data.');
+                    // setError(userData.msg || 'Failed to fetch users data.'); // Replaced by toast
+                    showToast(userData.msg || 'Failed to fetch users data.', 'danger'); // <--- UPDATED
                 } else {
                     setAllUsers(userData);
                 }
             }
         } catch (err) {
             console.error('Frontend fetch admin data error:', err);
-            setError('Could not connect to the server or retrieve data.');
+            // setError('Could not connect to the server or retrieve data.'); // Replaced by toast
+            showToast('Could not connect to the server or retrieve data.', 'danger'); // <--- UPDATED
         } finally {
             setLoading(false);
         }
@@ -70,60 +79,56 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         fetchData();
-    }, [key, token, userRole]); // Re-fetch data when tab, token, or role changes
+    }, [key, token, userRole, showToast]); // Added showToast to dependencies
 
     // Handle technician verification (Approve/Disapprove)
     const handleTechnicianStatusChange = async (technicianId, statusType) => {
-        setMessage('');
-        setMessageType('');
+        // setMessage(''); // Replaced
+        // setMessageType(''); // Replaced
 
         if (!token || userRole !== 'admin') {
-            setMessage('Authentication required for this action.');
-            setMessageType('danger');
+            showToast('Authentication required for this action.', 'danger'); // <--- UPDATED
             return;
         }
 
         try {
-            const res = await fetch(`/api/admin/technicians/${technicianId}/${statusType}`, {
+            // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
+            const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/admin/technicians/${technicianId}/${statusType}`, {
                 method: 'PUT',
                 headers: { 'x-auth-token': token },
             });
             const data = await res.json();
 
             if (res.ok) {
-                setMessage(`Technician ${data.technician.user.name} ${statusType === 'verify' ? 'verified' : 'disapproved'} successfully!`);
-                setMessageType('success');
+                showToast(`Technician ${data.technician.user.name} ${statusType === 'verify' ? 'verified' : 'disapproved'} successfully!`, 'success'); // <--- UPDATED
                 fetchData(); // Re-fetch all data to update lists
             } else {
-                setMessage(data.msg || `Failed to ${statusType} technician.`);
-                setMessageType('danger');
+                showToast(data.msg || `Failed to ${statusType} technician.`, 'danger'); // <--- UPDATED
             }
         } catch (err) {
             console.error('Frontend technician status change error:', err);
-            setMessage('Server error during technician status change. Please try again.');
-            setMessageType('danger');
+            showToast('Server error during technician status change. Please try again.', 'danger'); // <--- UPDATED
         }
     };
 
     // Handle user role change
     const handleUserRoleChange = async (userId, newRole) => {
-        setMessage('');
-        setMessageType('');
+        // setMessage(''); // Replaced
+        // setMessageType(''); // Replaced
 
         if (!token || userRole !== 'admin') {
-            setMessage('Authentication required for this action.');
-            setMessageType('danger');
+            showToast('Authentication required for this action.', 'danger'); // <--- UPDATED
             return;
         }
 
         if (currentUserId === userId && newRole !== 'admin') {
-            setMessage('Cannot demote your own admin account.');
-            setMessageType('danger');
+            showToast('Cannot demote your own admin account.', 'danger'); // <--- UPDATED
             return;
         }
 
         try {
-            const res = await fetch(`/api/admin/users/${userId}/role`, {
+            // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
+            const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/admin/users/${userId}/role`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -134,17 +139,14 @@ const AdminDashboard = () => {
             const data = await res.json();
 
             if (res.ok) {
-                setMessage(`User ${data.user.email} role updated to ${newRole}!`);
-                setMessageType('success');
+                showToast(`User ${data.user.email} role updated to ${newRole}!`, 'success'); // <--- UPDATED
                 fetchData(); // Re-fetch all data
             } else {
-                setMessage(data.msg || 'Failed to update user role.');
-                setMessageType('danger');
+                showToast(data.msg || 'Failed to update user role.', 'danger'); // <--- UPDATED
             }
         } catch (err) {
             console.error('Frontend user role update error:', err);
-            setMessage('Server error updating user role. Please try again.');
-            setMessageType('danger');
+            showToast('Server error updating user role. Please try again.', 'danger'); // <--- UPDATED
         }
     };
 
@@ -153,28 +155,26 @@ const AdminDashboard = () => {
         if (!window.confirm(`Are you sure you want to delete technician "${techName}" and all associated data? This action cannot be undone.`)) {
             return;
         }
-        setMessage('');
-        setMessageType('');
+        // setMessage(''); // Replaced
+        // setMessageType(''); // Replaced
 
         try {
-            const res = await fetch(`/api/admin/technicians/${technicianId}`, {
+            // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
+            const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/admin/technicians/${technicianId}`, {
                 method: 'DELETE',
                 headers: { 'x-auth-token': token },
             });
             const data = await res.json();
 
             if (res.ok) {
-                setMessage(`Technician "${techName}" deleted successfully!`);
-                setMessageType('success');
+                showToast(`Technician "${techName}" deleted successfully!`, 'success'); // <--- UPDATED
                 fetchData(); // Re-fetch data
             } else {
-                setMessage(data.msg || 'Failed to delete technician.');
-                setMessageType('danger');
+                showToast(data.msg || 'Failed to delete technician.', 'danger'); // <--- UPDATED
             }
         } catch (err) {
             console.error('Frontend delete technician error:', err);
-            setMessage('Server error deleting technician. Please try again.');
-            setMessageType('danger');
+            showToast('Server error deleting technician. Please try again.', 'danger'); // <--- UPDATED
         }
     };
 
@@ -183,34 +183,31 @@ const AdminDashboard = () => {
         if (!window.confirm(`Are you sure you want to delete user "${userEmail}" and ALL their associated data (technician profiles, bookings, reviews)? This action cannot be undone and is extremely destructive.`)) {
             return;
         }
-        setMessage('');
-        setMessageType('');
+        // setMessage(''); // Replaced
+        // setMessageType(''); // Replaced
 
         if (currentUserId === userId) {
-            setMessage('Cannot delete your own admin account. Please create another admin first if you wish to delete this account.');
-            setMessageType('danger');
+            showToast('Cannot delete your own admin account. Please create another admin first if you wish to delete this account.', 'danger'); // <--- UPDATED
             return;
         }
 
         try {
-            const res = await fetch(`/api/admin/users/${userId}`, {
+            // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
+            const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/admin/users/${userId}`, {
                 method: 'DELETE',
                 headers: { 'x-auth-token': token },
             });
             const data = await res.json();
 
             if (res.ok) {
-                setMessage(`User "${userEmail}" and all associated data deleted successfully!`);
-                setMessageType('success');
+                showToast(`User "${userEmail}" and all associated data deleted successfully!`, 'success'); // <--- UPDATED
                 fetchData(); // Re-fetch data
             } else {
-                setMessage(data.msg || 'Failed to delete user.');
-                setMessageType('danger');
+                showToast(data.msg || 'Failed to delete user.', 'danger'); // <--- UPDATED
             }
         } catch (err) {
             console.error('Frontend delete user error:', err);
-            setMessage('Server error deleting user. Please try again.');
-            setMessageType('danger');
+            showToast('Server error deleting user. Please try again.', 'danger'); // <--- UPDATED
         }
     };
 
@@ -219,14 +216,14 @@ const AdminDashboard = () => {
         return (
             <Container className="mt-5 text-center">
                 <Spinner animation="border" role="status">
-                    <span className="visually-hidden">Loading...</span>
+                    <span className="visually-hidden">Loading admin dashboard...</span>
                 </Spinner>
                 <p>Loading admin dashboard...</p>
             </Container>
         );
     }
 
-    if (error) {
+    if (error) { // This error is for initial page load failure, not individual action failures
         return (
             <Container className="mt-5">
                 <Alert variant="danger">{error}</Alert>
@@ -237,7 +234,8 @@ const AdminDashboard = () => {
     return (
         <Container className="mt-5">
             <h2 className="text-center mb-4">Admin Dashboard</h2>
-            {message && <Alert variant={messageType}>{message}</Alert>}
+            {/* Removed static message Alert */}
+            {/* {message && <Alert variant={messageType}>{message}</Alert>} */}
 
             <Tabs
                 id="admin-dashboard-tabs"
@@ -369,7 +367,7 @@ const AdminDashboard = () => {
                                                 variant="danger"
                                                 onClick={() => handleDeleteUser(user._id, user.email)}
                                                 className="w-100 mt-2"
-                                                disabled={user._id === currentUserId} // Disable delete for current admin
+                                                disabled={user._id === currentUserId}
                                             >
                                                 Delete User
                                             </Button>

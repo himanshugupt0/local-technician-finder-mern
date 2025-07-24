@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Alert, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext'; // <--- NEW IMPORT
+import { useToast } from '../context/ToastContext';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -14,13 +14,10 @@ const Register = () => {
     location: ''
   });
   const [loading, setLoading] = useState(false);
-  // Removed message and messageType states as they will be handled by toast
-  // const [message, setMessage] = useState('');
-  // const [messageType, setMessageType] = useState('');
 
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { showToast } = useToast(); // <--- Use the showToast function
+  const { showToast } = useToast();
 
   const { name, email, password, password2, role, location } = formData;
 
@@ -28,17 +25,17 @@ const Register = () => {
 
   const onSubmit = async e => {
     e.preventDefault();
-    // Removed setMessage('');
     setLoading(true);
 
     if (password !== password2) {
-      showToast('Passwords do not match', 'danger'); // <--- UPDATED: Use toast
+      showToast('Passwords do not match', 'danger');
       setLoading(false);
       return;
     }
 
     try {
-      const res = await fetch('/api/auth/register', {
+      // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -49,7 +46,7 @@ const Register = () => {
       const data = await res.json();
 
       if (res.ok) {
-        showToast('Registration successful! Logging you in...', 'success'); // <--- UPDATED: Use toast
+        showToast('Registration successful! Logging you in...', 'success');
         login(data.token, data.role, data.userId);
 
         if (data.role === 'admin') {
@@ -61,11 +58,11 @@ const Register = () => {
         }
 
       } else {
-        showToast(data.msg || 'Registration failed.', 'danger'); // <--- UPDATED: Use toast
+        showToast(data.msg || 'Registration failed.', 'danger');
       }
     } catch (err) {
       console.error('Frontend registration error:', err);
-      showToast('Server error during registration. Please try again later.', 'danger'); // <--- UPDATED: Use toast
+      showToast('Server error during registration. Please try again later.', 'danger');
     } finally {
       setLoading(false);
     }
@@ -76,8 +73,6 @@ const Register = () => {
       <Row className="justify-content-md-center">
         <Col md={6}>
           <h2 className="text-center mb-4">Register Account</h2>
-          {/* Removed static Alert as toasts will handle messages */}
-          {/* {message && <Alert variant={messageType}>{message}</Alert>} */}
           <Form onSubmit={onSubmit}>
             <Form.Group className="mb-3" controlId="name">
               <Form.Label>Name</Form.Label>
