@@ -1,0 +1,19 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* You can remove all previously added .react-stars or .review-rating-input CSS rules here.
+   The new custom StarRatingInput component handles its own basic inline styles for clickability.
+   If you want to add custom spacing or styling for the custom stars, you'd add new rules like:
+   .star-rating-item svg { margin-right: 2px; }
+*/
