@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // <--- NEW: Import useCallback
 import { Container, Row, Col, Card, Alert, Spinner, ListGroup, Badge, Button } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom'; // Import Link for navigation to tech profile
 
 const UserBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -12,7 +12,8 @@ const UserBookings = () => {
   const userRole = localStorage.getItem('userRole');
   const userId = localStorage.getItem('userId');
 
-  const fetchUserBookingsAndReviews = async () => {
+  // --- FIX: Wrap fetchUserBookingsAndReviews in useCallback to stabilize its reference ---
+  const fetchUserBookingsAndReviews = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -23,7 +24,6 @@ const UserBookings = () => {
     }
 
     try {
-      // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URLs ---
       // 1. Fetch user's bookings
       const bookingsRes = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/bookings/me`, {
         headers: { 'x-auth-token': token },
@@ -42,15 +42,13 @@ const UserBookings = () => {
 
       const reviewsByThisUser = [];
       for (const techId of techIdsInCompletedBookings) {
-        // Fetch reviews for each technician in completed bookings
         const reviewsForTechRes = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/reviews/${techId}`);
         const reviewsForTechData = await reviewsForTechRes.json();
         if (reviewsForTechRes.ok) {
-          reviewsForTechData.filter(r => r.user._id === userId).forEach(r => reviewsByThisUser.push(r));
+          reviewsForTechData.filter(r => r.user && r.user._id === userId).forEach(r => reviewsByThisUser.push(r)); // Added r.user && to prevent error if user is null
         }
       }
 
-      // 3. Identify completed bookings that need reviews
       const needsReview = completedBookings.filter(booking => {
         const hasReviewedThisTech = reviewsByThisUser.some(
           review => review.technician === booking.technician._id && review.user._id === userId
@@ -58,7 +56,7 @@ const UserBookings = () => {
         return !hasReviewedThisTech;
       });
       setPendingReviews(needsReview);
-      // --- END UPDATED FETCH CALLS ---
+
 
     } catch (err) {
       console.error('Frontend fetch user bookings and reviews error:', err);
@@ -66,11 +64,12 @@ const UserBookings = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, userRole, userId]); // Dependencies for useCallback
 
+  // --- UPDATED: useEffect depends on the stable fetchUserBookingsAndReviews function ---
   useEffect(() => {
     fetchUserBookingsAndReviews();
-  }, [token, userRole, userId]);
+  }, [fetchUserBookingsAndReviews]);
 
   if (loading) {
     return (

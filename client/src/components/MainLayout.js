@@ -1,7 +1,11 @@
-import React from 'react'; // `useState`, `useEffect` removed as they are not directly used in MainLayout, now handled by useAuth
-// --- UPDATED IMPORTS FOR REACT-ROUTER-DOM V5 ---
-import { BrowserRouter as Router, Switch, Route, Link, useHistory } from 'react-router-dom'; // `Router` is used, so keep it. `Routes` becomes Switch, `useNavigate` becomes `useHistory`
-// --- END UPDATED IMPORTS ---
+import React from 'react';
+// --- FIX: Remove Router from import if not used directly as Router, but kept for <Router> tag ---
+// Instead of removing Router, we'll keep it as <Router> tag needs it.
+// The warning 'Router' is defined but never used comes because BrowserRouter as Router is used in App.js.
+// In MainLayout.js, it just needs Switch, Route, Link, useHistory.
+// Let's adjust the import for MainLayout.js to not import BrowserRouter as Router.
+import { Switch, Route, Link, useHistory } from 'react-router-dom'; // <--- UPDATED: Removed BrowserRouter as Router
+
 import { Navbar, Nav, Container, Button, Card, Row, Col, Spinner } from 'react-bootstrap';
 
 import { useAuth } from '../context/AuthContext';
@@ -44,7 +48,6 @@ const HomePage = () => {
 
   return (
     <Container className="mt-4 flex-grow-1">
-      {/* Hero Section */}
       <Row className="justify-content-center text-center py-5 bg-light rounded-3 shadow-sm">
         <Col md={10}>
           <h1 className="display-4 fw-bold mb-3">Find Your Local Expert, Fast.</h1>
@@ -61,7 +64,6 @@ const HomePage = () => {
         </Col>
       </Row>
 
-      {/* Stats Section */}
       <Row className="justify-content-center mt-5">
         <Col md={8} className="text-center">
           <Card className="shadow-sm">
@@ -82,7 +84,6 @@ const HomePage = () => {
         </Col>
       </Row>
 
-      {/* How It Works Section */}
       <Row className="justify-content-center mt-5">
         <Col md={10}>
           <h2 className="text-center mb-4">How It Works</h2>
@@ -122,11 +123,8 @@ const HomePage = () => {
   );
 };
 
-// --- REMOVED: TechnicianDashboard placeholder (as it's an imported component) ---
+// Removed placeholder TechnicanDashboard
 // const TechnicianDashboard = () => ( ... );
-
-// --- REMOVED: AdminDashboard placeholder (as it's an imported component) ---
-// const AdminDashboard = () => ( ... );
 
 
 function MainLayout() {
@@ -180,7 +178,7 @@ function MainLayout() {
 
       {/* Main Content Area - Routes will render here */}
       <div style={{ flex: 1 }}>
-          <Switch> {/* Routes becomes Switch */}
+          <Switch>
             <Route exact path="/" component={HomePage} />
             <Route path="/login" component={Login} />
             <Route path="/register" component={Register} />
