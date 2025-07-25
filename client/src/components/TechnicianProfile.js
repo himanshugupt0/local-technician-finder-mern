@@ -175,7 +175,7 @@ const TechnicianProfile = () => {
     }
     if (reviewFormData.rating === 0) {
         showToast('Please select a rating (1-5 stars).', 'danger');
-        setReviewSubmitting(false); // Corrected: Use setReviewSubmitting
+        setReviewSubmitting(false);
         return;
     }
 
