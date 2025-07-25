@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+// --- UPDATED IMPORTS FOR REACT-ROUTER-DOM V5 ---
+import { Link, useRouteMatch } from 'react-router-dom'; // <--- useParams removed, useRouteMatch added
+// --- END UPDATED IMPORTS ---
 import { Container, Row, Col, Card, ListGroup, Alert, Spinner, Badge, Form, Button } from 'react-bootstrap';
 import Rating from 'react-rating';
 import { FaStar, FaRegStar } from 'react-icons/fa';
@@ -8,11 +10,12 @@ import StarRatingInput from './StarRatingInput';
 import { useToast } from '../context/ToastContext';
 
 const TechnicianProfile = () => {
-  const { id } = useParams();
+  const { params } = useRouteMatch(); // <--- UPDATED: useRouteMatch hook
+  const { id } = params; // <--- UPDATED: Get id from params
   const [technician, setTechnician] = useState(null);
   const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true); // Manages initial page load
-  const [error, setError] = useState(null); // Keep this error for initial page load failure
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [bookingFormData, setBookingFormData] = useState({
     bookingDate: '',
@@ -27,7 +30,6 @@ const TechnicianProfile = () => {
     comment: ''
   });
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
-  // Removed reviewMessage and reviewMessageType useState declarations. Their references in JSX will also be removed.
 
   const [hasCompletedBookingWithTech, setHasCompletedBookingWithTech] = useState(false);
 
@@ -88,7 +90,7 @@ const TechnicianProfile = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, userRole, token]);
+  }, [id, userRole, token, process.env.REACT_APP_API_BASE_URL]); // Added env var to dependencies (just to be safe)
 
   useEffect(() => {
     fetchTechnicianAndReviews();
@@ -259,253 +261,253 @@ const TechnicianProfile = () => {
                   <strong>Location:</strong> {technician.location}
                 </ListGroup.Item>
                 <ListGroup.Item>
-                  <strong>Services Offered:</strong>
-                  <div>
-                    {technician.servicesOffered.map((service, index) => (
-                      <Badge bg="primary" key={index} className="me-1 mb-1">
-                        {service}
-                      </Badge>
-                    ))}
-                  </div>
-                </ListGroup.Item>
-                {technician.specializations && technician.specializations.length > 0 && (
-                    <ListGroup.Item>
-                        <strong>Specializations:</strong>
-                        <div>
-                            {technician.specializations.map((spec, index) => (
-                            <Badge bg="secondary" key={index} className="me-1 mb-1">
-                                {spec}
-                            </Badge>
-                            ))}
-                        </div>
+                      <strong>Services Offered:</strong>
+                      <div>
+                        {technician.servicesOffered.map((service, index) => (
+                          <Badge bg="primary" key={index} className="me-1 mb-1">
+                            {service}
+                          </Badge>
+                        ))}
+                      </div>
                     </ListGroup.Item>
-                )}
-                <ListGroup.Item>
-                  <strong>Availability:</strong> {technician.availability.join(', ')}
-                </ListGroup.Item>
-                <ListGroup.Item className="d-flex align-items-center">
-                  <strong>Overall Rating:</strong>
-                  <div className="ms-2">
-                    <Rating
-                        initialRating={technician.averageRating}
-                        emptySymbol={<FaRegStar color="#ccc" className="icon" />}
-                        fullSymbol={<FaStar color="#ffd700" className="icon" />}
-                        readonly
-                        fractions={2}
-                        start={0}
-                        stop={5}
-                        className="d-inline-block"
-                    />
-                  </div>
-                  <span className="ms-2">
-                    {technician.averageRating.toFixed(1)} ({technician.reviewCount} reviews)
-                  </span>
-                </ListGroup.Item>
-                <ListGroup.Item>
-                  <strong>Description:</strong> {technician.description || 'No description provided.'}
-                </ListGroup.Item>
-                <ListGroup.Item>
-                  <strong>Status:</strong>{' '}
-                  <Badge bg={technician.isAvailable ? 'success' : 'danger'}>
-                    {technician.isAvailable ? 'Available' : 'Currently Unavailable'}
-                  </Badge>
-                  {' '}
-                  <Badge bg={technician.isVerifiedByAdmin ? 'info' : 'warning'}>
-                    {technician.isVerifiedByAdmin ? 'Verified by Admin' : 'Pending Verification'}
-                  </Badge>
-                </ListGroup.Item>
-              </ListGroup>
-            </Card.Body>
-          </Card>
-
-          {/* Booking Form Section */}
-          {userRole === 'user' && token ? (
-            <Card className="mt-4">
-              <Card.Header as="h4">Book This Technician</Card.Header>
-              <Card.Body>
-                <Form onSubmit={handleBookingSubmit}>
-                  <Form.Group className="mb-3" controlId="serviceSelect">
-                    <Form.Label>Select Service</Form.Label>
-                    <Form.Select
-                      name="service"
-                      value={bookingFormData.service}
-                      onChange={handleBookingChange}
-                      required
-                      disabled={bookingLoading}
-                    >
-                      <option value="">Choose...</option>
-                      {technician.servicesOffered.map((service, index) => (
-                        <option key={index} value={service}>
-                          {service}
-                        </option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
-
-                  <Form.Group className="mb-3" controlId="bookingDate">
-                    <Form.Label>Preferred Date</Form.Label>
-                    <Form.Control
-                      type="date"
-                      name="bookingDate"
-                      value={bookingFormData.bookingDate}
-                      onChange={handleBookingChange}
-                      required
-                      disabled={bookingLoading}
-                    />
-                  </Form.Group>
-
-                  <Form.Group className="mb-3" controlId="bookingTime">
-                    <Form.Label>Preferred Time</Form.Label>
-                    <Form.Control
-                      type="time"
-                      name="bookingTime"
-                      value={bookingFormData.bookingTime}
-                      onChange={handleBookingChange}
-                      required
-                      disabled={bookingLoading}
-                    />
-                  </Form.Group>
-
-                  <Form.Group className="mb-3" controlId="notes">
-                    <Form.Label>Notes (Optional)</Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={3}
-                      placeholder="Any specific instructions or details?"
-                      name="notes"
-                      value={bookingFormData.notes}
-                      onChange={handleBookingChange}
-                      disabled={bookingLoading}
-                    />
-                  </Form.Group>
-
-                  <Button variant="success" type="submit" className="w-100" disabled={bookingLoading}>
-                    {bookingLoading ? (
-                      <>
-                        <Spinner
-                          as="span"
-                          animation="border"
-                          size="sm"
-                          role="status"
-                          aria-hidden="true"
-                          className="me-2"
+                    {technician.specializations && technician.specializations.length > 0 && (
+                        <ListGroup.Item>
+                            <strong>Specializations:</strong>
+                            <div>
+                                {technician.specializations.map((spec, index) => (
+                                <Badge bg="secondary" key={index} className="me-1 mb-1">
+                                    {spec}
+                                </Badge>
+                                ))}
+                            </div>
+                        </ListGroup.Item>
+                    )}
+                    <ListGroup.Item>
+                      <strong>Availability:</strong> {technician.availability.join(', ')}
+                    </ListGroup.Item>
+                    <ListGroup.Item className="d-flex align-items-center">
+                      <strong>Overall Rating:</strong>
+                      <div className="ms-2">
+                        <Rating
+                            initialRating={technician.averageRating}
+                            emptySymbol={<FaRegStar color="#ccc" className="icon" />}
+                            fullSymbol={<FaStar color="#ffd700" className="icon" />}
+                            readonly
+                            fractions={2}
+                            start={0}
+                            stop={5}
+                            className="d-inline-block"
                         />
-                        Booking...
-                      </>
-                    ) : (
-                      'Confirm Booking'
-                    )}
-                  </Button>
-                </Form>
-              </Card.Body>
-            </Card>
-          ) : (
-            <Alert variant="info" className="mt-4 text-center">
-              Please <Link to="/login">login</Link> as a **user** to book this technician.
-            </Alert>
-          )}
+                      </div>
+                      <span className="ms-2">
+                        {technician.averageRating.toFixed(1)} ({technician.reviewCount} reviews)
+                      </span>
+                    </ListGroup.Item>
+                    <ListGroup.Item>
+                      <strong>Description:</strong> {technician.description || 'No description provided.'}
+                    </ListGroup.Item>
+                    <ListGroup.Item>
+                      <strong>Status:</strong>{' '}
+                      <Badge bg={technician.isAvailable ? 'success' : 'danger'}>
+                        {technician.isAvailable ? 'Available' : 'Currently Unavailable'}
+                      </Badge>
+                      {' '}
+                      <Badge bg={technician.isVerifiedByAdmin ? 'info' : 'warning'}>
+                        {technician.isVerifiedByAdmin ? 'Verified by Admin' : 'Pending Verification'}
+                      </Badge>
+                    </ListGroup.Item>
+                  </ListGroup>
+                </Card.Body>
+              </Card>
 
+              {/* Booking Form Section */}
+              {userRole === 'user' && token ? (
+                <Card className="mt-4">
+                  <Card.Header as="h4">Book This Technician</Card.Header>
+                  <Card.Body>
+                    <Form onSubmit={handleBookingSubmit}>
+                      <Form.Group className="mb-3" controlId="serviceSelect">
+                        <Form.Label>Select Service</Form.Label>
+                        <Form.Select
+                          name="service"
+                          value={bookingFormData.service}
+                          onChange={handleBookingChange}
+                          required
+                          disabled={bookingLoading}
+                        >
+                          <option value="">Choose...</option>
+                          {technician.servicesOffered.map((service, index) => (
+                            <option key={index} value={service}>
+                              {service}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
 
-          {/* Review Section */}
-          <Card className="mt-4">
-            <Card.Header as="h4">Reviews ({technician.reviewCount})</Card.Header>
-            <Card.Body>
-              {reviewMessage && <Alert variant={reviewMessageType}>{reviewMessage}</Alert>}
+                      <Form.Group className="mb-3" controlId="bookingDate">
+                        <Form.Label>Preferred Date</Form.Label>
+                        <Form.Control
+                          type="date"
+                          name="bookingDate"
+                          value={bookingFormData.bookingDate}
+                          onChange={handleBookingChange}
+                          required
+                          disabled={bookingLoading}
+                        />
+                      </Form.Group>
 
-              {/* Review Submission Form */}
-              {canSubmitReview ? (
-                <Form onSubmit={handleReviewSubmit} className="mb-4">
-                  <h5>Submit Your Review</h5>
-                  <Form.Group className="mb-3" controlId="rating">
-                    <Form.Label>Rating</Form.Label>
-                    <StarRatingInput
-                        value={reviewFormData.rating}
-                        onChange={handleStarRatingChange}
-                        size={30}
-                        activeColor="#ffd700"
-                        count={5}
-                        disabled={reviewSubmitting}
-                    />
-                  </Form.Group>
+                      <Form.Group className="mb-3" controlId="bookingTime">
+                        <Form.Label>Preferred Time</Form.Label>
+                        <Form.Control
+                          type="time"
+                          name="bookingTime"
+                          value={bookingFormData.bookingTime}
+                          onChange={handleBookingChange}
+                          required
+                          disabled={bookingLoading}
+                        />
+                      </Form.Group>
 
-                  <Form.Group className="mb-3" controlId="comment">
-                    <Form.Label>Comment (Optional)</Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={3}
-                      placeholder="Share your experience..."
-                      name="comment"
-                      value={reviewFormData.comment}
-                      onChange={handleReviewChange}
-                      disabled={reviewSubmitting}
-                    />
-                  </Form.Group>
+                      <Form.Group className="mb-3" controlId="notes">
+                        <Form.Label>Notes (Optional)</Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          rows={3}
+                          placeholder="Any specific instructions or details?"
+                          name="notes"
+                          value={bookingFormData.notes}
+                          onChange={handleBookingChange}
+                          disabled={bookingLoading}
+                        />
+                      </Form.Group>
 
-                  <Button variant="info" type="submit" disabled={reviewSubmitting}>
-                    {reviewSubmitting ? (
-                        <>
+                      <Button variant="success" type="submit" className="w-100" disabled={bookingLoading}>
+                        {bookingLoading ? (
+                          <>
                             <Spinner
-                                as="span"
-                                animation="border"
-                                size="sm"
-                                role="status"
-                                aria-hidden="true"
-                                className="me-2"
+                              as="span"
+                              animation="border"
+                              size="sm"
+                              role="status"
+                              aria-hidden="true"
+                              className="me-2"
                             />
-                            Submitting...
-                        </>
-                    ) : (
-                        'Submit Review'
-                    )}
-                  </Button>
-                </Form>
-              ) : userRole === 'user' && token && hasReviewed ? (
-                <Alert variant="info" className="text-center">
-                    You have already reviewed this technician.
-                </Alert>
-              ) : userRole === 'user' && token && !hasCompletedBookingWithTech ? (
-                <Alert variant="info" className="text-center">
-                    You can only submit a review after a service with this technician is marked as "Completed".
-                </Alert>
+                            Booking...
+                          </>
+                        ) : (
+                          'Confirm Booking'
+                        )}
+                      </Button>
+                    </Form>
+                  </Card.Body>
+                </Card>
               ) : (
                 <Alert variant="info" className="mt-4 text-center">
-                    <Link to="/login">Login</Link> as a **user** to submit a review.
+                  Please <Link to="/login">login</Link> as a **user** to book this technician.
                 </Alert>
               )}
 
-              {/* Display Existing Reviews */}
-              {reviews.length === 0 ? (
-                <p className="text-center mt-4">No reviews yet. Be the first to leave one!</p>
-              ) : (
-                <ListGroup className="mt-4">
-                  {reviews.map((review) => (
-                    <ListGroup.Item key={review._id} className="mb-2 shadow-sm rounded">
-                      <strong>{review.user ? review.user.name : 'Anonymous User'}</strong>
-                      <div className="d-flex align-items-center mb-1">
-                        <Rating
-                          initialRating={review.rating}
-                          emptySymbol={<FaRegStar color="#ccc" size={20} />}
-                          fullSymbol={<FaStar color="#ffd700" size={20} />}
-                          readonly
-                          fractions={0}
-                          start={0}
-                          stop={5}
-                          className="d-inline-block"
-                        />
-                        <span className="ms-2 text-muted">({review.rating}/5)</span>
-                      </div>
-                      <p className="text-muted mb-1"><small>{new Date(review.createdAt).toLocaleDateString()}</small></p>
-                      <p>{review.comment || <em>No comment provided.</em>}</p>
-                    </ListGroup.Item>
-                  ))}
-                </ListGroup>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
-  );
-};
 
-export default TechnicianProfile;
+              {/* Review Section */}
+              <Card className="mt-4">
+                <Card.Header as="h4">Reviews ({technician.reviewCount})</Card.Header>
+                <Card.Body>
+                  {reviewMessage && <Alert variant={reviewMessageType}>{reviewMessage}</Alert>}
+
+                  {/* Review Submission Form */}
+                  {canSubmitReview ? (
+                    <Form onSubmit={handleReviewSubmit} className="mb-4">
+                      <h5>Submit Your Review</h5>
+                      <Form.Group className="mb-3" controlId="rating">
+                        <Form.Label>Rating</Form.Label>
+                        <StarRatingInput
+                            value={reviewFormData.rating}
+                            onChange={handleStarRatingChange}
+                            size={30}
+                            activeColor="#ffd700"
+                            count={5}
+                            disabled={reviewSubmitting}
+                        />
+                      </Form.Group>
+
+                      <Form.Group className="mb-3" controlId="comment">
+                        <Form.Label>Comment (Optional)</Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          rows={3}
+                          placeholder="Share your experience..."
+                          name="comment"
+                          value={reviewFormData.comment}
+                          onChange={handleReviewChange}
+                          disabled={reviewSubmitting}
+                        />
+                      </Form.Group>
+
+                      <Button variant="info" type="submit" disabled={reviewSubmitting}>
+                        {reviewSubmitting ? (
+                            <>
+                                <Spinner
+                                    as="span"
+                                    animation="border"
+                                    size="sm"
+                                    role="status"
+                                    aria-hidden="true"
+                                    className="me-2"
+                                />
+                                Submitting...
+                            </>
+                        ) : (
+                            'Submit Review'
+                        )}
+                      </Button>
+                    </Form>
+                  ) : userRole === 'user' && token && hasReviewed ? (
+                    <Alert variant="info" className="text-center">
+                        You have already reviewed this technician.
+                    </Alert>
+                  ) : userRole === 'user' && token && !hasCompletedBookingWithTech ? (
+                    <Alert variant="info" className="text-center">
+                        You can only submit a review after a service with this technician is marked as "Completed".
+                    </Alert>
+                  ) : (
+                    <Alert variant="info" className="mt-4 text-center">
+                        <Link to="/login">Login</Link> as a **user** to submit a review.
+                    </Alert>
+                  )}
+
+                  {/* Display Existing Reviews */}
+                  {reviews.length === 0 ? (
+                    <p className="text-center mt-4">No reviews yet. Be the first to leave one!</p>
+                  ) : (
+                    <ListGroup className="mt-4">
+                      {reviews.map((review) => (
+                        <ListGroup.Item key={review._id} className="mb-2 shadow-sm rounded">
+                          <strong>{review.user ? review.user.name : 'Anonymous User'}</strong>
+                          <div className="d-flex align-items-center mb-1">
+                            <Rating
+                              initialRating={review.rating}
+                              emptySymbol={<FaRegStar color="#ccc" size={20} />}
+                              fullSymbol={<FaStar color="#ffd700" size={20} />}
+                              readonly
+                              fractions={0}
+                              start={0}
+                              stop={5}
+                              className="d-inline-block"
+                            />
+                            <span className="ms-2 text-muted">({review.rating}/5)</span>
+                          </div>
+                          <p className="text-muted mb-1"><small>{new Date(review.createdAt).toLocaleDateString()}</small></p>
+                          <p>{review.comment || <em>No comment provided.</em>}</p>
+                        </ListGroup.Item>
+                      ))}
+                    </ListGroup>
+                  )}
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+      );
+    };
+
+    export default TechnicianProfile;
