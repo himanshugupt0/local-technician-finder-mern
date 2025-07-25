@@ -21,15 +21,16 @@ const TechnicianProfile = () => {
     notes: ''
   });
   const [bookingLoading, setBookingLoading] = useState(false);
+  // Removed bookingMessage and bookingMessageType useState declarations. Their references in JSX will also be removed.
 
   const [reviewFormData, setReviewFormData] = useState({
     rating: 0,
     comment: ''
   });
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  // Removed reviewMessage and reviewMessageType useState declarations. Their references in JSX will also be removed.
 
-  const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState('');
+  // Removed global message and messageType useState declarations.
 
   const [hasCompletedBookingWithTech, setHasCompletedBookingWithTech] = useState(false);
 
@@ -43,12 +44,10 @@ const TechnicianProfile = () => {
   const fetchTechnicianAndReviews = async () => {
     setLoading(true);
     setError(null);
-    setMessage('');
+    // setMessage(''); // Removed as 'message' state is removed
     setHasCompletedBookingWithTech(false);
 
     try {
-      // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URLs ---
-      // Fetch technician profile
       const techRes = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/technicians/${id}`);
       const techData = await techRes.json();
 
@@ -62,7 +61,6 @@ const TechnicianProfile = () => {
         setBookingFormData(prev => ({ ...prev, service: techData.servicesOffered[0] }));
       }
 
-      // Fetch reviews for this technician
       const reviewRes = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/reviews/${id}`);
       const reviewData = await reviewRes.json();
 
@@ -88,7 +86,6 @@ const TechnicianProfile = () => {
           console.error('Failed to fetch user bookings for review check:', bookingsData.msg || 'Unknown error');
         }
       }
-      // --- END UPDATED FETCH CALLS ---
 
     } catch (err) {
       console.error('Frontend fetch error (tech or reviews):', err);
@@ -110,6 +107,7 @@ const TechnicianProfile = () => {
 
   const handleBookingSubmit = async e => {
     e.preventDefault();
+    // Removed setBookingMessage('');
     setBookingLoading(true);
 
     if (!token) {
@@ -131,7 +129,6 @@ const TechnicianProfile = () => {
     }
 
     try {
-      // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
       const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/bookings`, {
         method: 'POST',
         headers: {
@@ -145,7 +142,6 @@ const TechnicianProfile = () => {
           notes: bookingFormData.notes
         }),
       });
-      // --- END UPDATED FETCH CALL ---
 
       const data = await res.json();
 
@@ -173,6 +169,7 @@ const TechnicianProfile = () => {
 
   const handleReviewSubmit = async e => {
     e.preventDefault();
+    // Removed setReviewMessage('');
     setReviewSubmitting(true);
 
     if (!token) {
@@ -192,7 +189,6 @@ const TechnicianProfile = () => {
     }
 
     try {
-      // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
       const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/reviews`, {
         method: 'POST',
         headers: {
@@ -204,7 +200,6 @@ const TechnicianProfile = () => {
           comment: reviewFormData.comment
         }),
       });
-      // --- END UPDATED FETCH CALL ---
 
       const data = await res.json();
 
@@ -234,7 +229,7 @@ const TechnicianProfile = () => {
     );
   }
 
-  if (error) {
+  if (error) { // This 'error' state is for initial page load errors
     return (
       <Container className="mt-5">
         <Alert variant="danger">{error}</Alert>
@@ -337,7 +332,7 @@ const TechnicianProfile = () => {
             <Card className="mt-4">
               <Card.Header as="h4">Book This Technician</Card.Header>
               <Card.Body>
-                {bookingMessage && <Alert variant={bookingMessageType}>{bookingMessage}</Alert>}
+                {/* Replaced bookingMessage Alert */}
                 <Form onSubmit={handleBookingSubmit}>
                   <Form.Group className="mb-3" controlId="serviceSelect">
                     <Form.Label>Select Service</Form.Label>
@@ -425,7 +420,7 @@ const TechnicianProfile = () => {
           <Card className="mt-4">
             <Card.Header as="h4">Reviews ({technician.reviewCount})</Card.Header>
             <Card.Body>
-              {reviewMessage && <Alert variant={reviewMessageType}>{reviewMessage}</Alert>}
+              {/* Replaced reviewMessage Alert */}
 
               {/* Review Submission Form */}
               {canSubmitReview ? (

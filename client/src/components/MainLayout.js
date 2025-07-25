@@ -130,6 +130,7 @@ const TechnicianDashboard = () => (
   );
 
 
+
 function MainLayout() {
   const { isLoggedIn, userRole, loading: authLoading, logout } = useAuth();
   const history = useHistory(); // <--- UPDATED: useNavigate becomes useHistory

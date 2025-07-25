@@ -8,13 +8,14 @@ const TechnicianList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedService, setSelectedService] = useState('');
-  const [searchTermLocation, setSearchTermLocation] = useState('');
-  const [searchTermServiceArea, setSearchTermServiceArea] = useState('');
+
+  const [searchTermLocation, setSearchTermLocation] = useState(''); // Immediate input for location
+  const [searchTermServiceArea, setSearchTermServiceArea] = useState(''); // Immediate input for service area
 
   const debouncedSearchLocation = useDebounce(searchTermLocation, 500);
   const debouncedSearchServiceArea = useDebounce(searchTermServiceArea, 500);
 
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(''); // For info messages like "No technicians found"
 
   // Define the expanded service types for the dropdown (must match backend enum)
   const serviceTypes = [
@@ -28,27 +29,26 @@ const TechnicianList = () => {
     setError(null);
     setMessage('');
 
-    let url = '/api/technicians'; // Default URL to get all verified technicians
+    let url = '/api/technicians';
     const params = new URLSearchParams();
 
     if (selectedService) {
       params.append('service', selectedService);
     }
-    if (searchLocation) {
-      params.append('location', searchLocation);
+    if (debouncedSearchLocation) { // Use debounced value for API call
+      params.append('location', debouncedSearchLocation);
     }
-    if (searchServiceArea) {
-      params.append('serviceArea', searchServiceArea);
+    if (debouncedSearchServiceArea) { // Use debounced value for API call
+      params.append('serviceArea', debouncedSearchServiceArea);
     }
 
-    const isSearchQuery = selectedService || searchLocation || searchServiceArea;
+    const isSearchQuery = selectedService || debouncedSearchLocation || debouncedSearchServiceArea;
 
     if (isSearchQuery) {
         url = `/api/technicians/search?${params.toString()}`;
     }
 
     try {
-      // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
       const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}${url}`);
       const data = await res.json();
 
@@ -129,8 +129,8 @@ const TechnicianList = () => {
               <Form.Control
                 type="text"
                 placeholder="e.g., Ludhiana"
-                value={searchTermLocation}
-                onChange={(e) => setSearchTermLocation(e.target.value)}
+                value={searchTermLocation} // <--- CORRECTED: Use searchTermLocation
+                onChange={(e) => setSearchTermLocation(e.target.value)} // <--- CORRECTED: Use setSearchTermLocation
               />
             </Form.Group>
           </Col>
@@ -140,8 +140,8 @@ const TechnicianList = () => {
               <Form.Control
                 type="text"
                 placeholder="e.g., Model Town"
-                value={searchTermServiceArea}
-                onChange={(e) => setSearchTermServiceArea(e.target.value)}
+                value={searchTermServiceArea} // <--- CORRECTED: Use searchTermServiceArea
+                onChange={(e) => setSearchTermServiceArea(e.target.value)} // <--- CORRECTED: Use setSearchTermServiceArea
               />
             </Form.Group>
           </Col>
