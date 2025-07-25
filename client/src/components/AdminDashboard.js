@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Alert, Spinner, Button, Badge, Tab, Tabs, Dropdown } from 'react-bootstrap';
-// --- UPDATED IMPORTS FOR REACT-ROUTER-DOM V5 ---
-import { useHistory } from 'react-router-dom'; // <--- useNavigate becomes useHistory
-// --- END UPDATED IMPORTS ---
+import { useHistory } from 'react-router-dom'; // Changed from useNavigate
 import { useToast } from '../context/ToastContext';
 
 const AdminDashboard = () => {
@@ -11,26 +9,27 @@ const AdminDashboard = () => {
     const [allTechnicians, setAllTechnicians] = useState([]); // State for all technicians
     const [allUsers, setAllUsers] = useState([]); // State for all users
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [message, setMessage] = useState('');
-    const [messageType, setMessageType] = useState('');
+    const [error, setError] = useState(null); // For initial page load error
+    // const [message, setMessage] = useState(''); // <--- REMOVED: No longer used, handled by Toast
+    // const [messageType, setMessageType] = useState(''); // <--- REMOVED: No longer used, handled by Toast
 
     const token = localStorage.getItem('token');
     const userRole = localStorage.getItem('userRole');
     const currentUserId = localStorage.getItem('userId');
-    const history = useHistory(); // <--- UPDATED: useNavigate becomes useHistory
+    const history = useHistory(); // Changed from useNavigate
     const { showToast } = useToast();
 
     // Function to fetch data based on active tab
+    // --- UPDATED: fetchData dependencies fixed by useCallback or adding them ---
     const fetchData = async () => {
         setLoading(true);
         setError(null);
-        setMessage('');
+        // setMessage(''); // Removed
 
         if (!token || userRole !== 'admin') {
             showToast('Access Denied. You must be logged in as an administrator.', 'danger');
             setLoading(false);
-            setTimeout(() => history.push('/login'), 2000); // <--- UPDATED: navigate becomes history.push
+            setTimeout(() => history.push('/login'), 2000);
             return;
         }
 
@@ -73,9 +72,10 @@ const AdminDashboard = () => {
         }
     };
 
+    // --- UPDATED: useEffect dependencies to resolve warning ---
     useEffect(() => {
         fetchData();
-    }, [key, token, userRole, showToast]);
+    }, [key, token, userRole, history, showToast]); // Added 'history' and 'showToast' as dependencies
 
     // Handle technician verification (Approve/Disapprove)
     const handleTechnicianStatusChange = async (technicianId, statusType) => {
@@ -110,11 +110,10 @@ const AdminDashboard = () => {
             return;
         }
 
-        if (currentUserId === userId) { // No need to check newRole !== 'admin' because current user cannot demote self
+        if (currentUserId === userId) {
             showToast('Cannot change role for your own admin account.', 'danger');
             return;
         }
-
 
         try {
             const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/admin/users/${userId}/role`, {
@@ -125,7 +124,7 @@ const AdminDashboard = () => {
                 },
                 body: JSON.stringify({ role: newRole }),
             });
-            const data = res.json(); // <-- Error was here previously (missing await)
+            const data = await res.json(); // <--- Corrected: Add 'await' here
 
             if (res.ok) {
                 showToast(`User ${data.user.email} role updated to ${newRole}!`, 'success');
