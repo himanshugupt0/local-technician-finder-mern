@@ -130,14 +130,6 @@ const TechnicianDashboard = () => (
   );
 
 
-const AdminDashboard = () => (
-    <Container className="mt-5 text-center">
-      <h2>Admin Dashboard</h2>
-      <p>Manage users, verify technicians, etc. here.</p>
-    </Container>
-  );
-
-
 function MainLayout() {
   const { isLoggedIn, userRole, loading: authLoading, logout } = useAuth();
   const history = useHistory(); // <--- UPDATED: useNavigate becomes useHistory
