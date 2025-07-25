@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'; // <--- NEW: Import useCallback
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Container, Row, Col, Card, ListGroup, Alert, Spinner, Badge, Form, Button } from 'react-bootstrap';
 import Rating from 'react-rating';
@@ -27,6 +27,7 @@ const TechnicianProfile = () => {
     comment: ''
   });
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  // Removed reviewMessage and reviewMessageType useState declarations. Their references in JSX will also be removed.
 
   const [hasCompletedBookingWithTech, setHasCompletedBookingWithTech] = useState(false);
 
@@ -36,7 +37,6 @@ const TechnicianProfile = () => {
   const userId = localStorage.getItem('userId');
   const { showToast } = useToast();
 
-  // --- FIX: Wrap fetchTechnicianAndReviews in useCallback to stabilize its reference ---
   const fetchTechnicianAndReviews = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -88,9 +88,8 @@ const TechnicianProfile = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, userRole, token]); // Dependencies for useCallback
+  }, [id, userRole, token]);
 
-  // --- UPDATED: useEffect depends on the stable fetchTechnicianAndReviews function ---
   useEffect(() => {
     fetchTechnicianAndReviews();
   }, [fetchTechnicianAndReviews]);
@@ -176,7 +175,7 @@ const TechnicianProfile = () => {
     }
     if (reviewFormData.rating === 0) {
         showToast('Please select a rating (1-5 stars).', 'danger');
-        setReviewSubmitting(false);
+        setReviewSubmitting(false); // Corrected: Use setReviewSubmitting
         return;
     }
 
