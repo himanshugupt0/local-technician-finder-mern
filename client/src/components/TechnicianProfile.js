@@ -28,9 +28,9 @@ const TechnicianProfile = () => {
   });
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
-  // --- FIX: Removed reviewMessage and reviewMessageType useState declarations. ---
-  // These are no longer needed as messages are handled by showToast.
+  // --- FIX: reviewMessage and reviewMessageType useState declarations are REMOVED, as they are handled by useToast ---
   // Make sure their references in JSX are also removed below.
+  // This is the main fix for the current error.
 
   const [hasCompletedBookingWithTech, setHasCompletedBookingWithTech] = useState(false);
 
@@ -91,7 +91,7 @@ const TechnicianProfile = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, userRole, token, process.env.REACT_APP_API_BASE_URL]); // Dependencies for useCallback
+  }, [id, userRole, token, process.env.REACT_APP_API_BASE_URL]);
 
   useEffect(() => {
     fetchTechnicianAndReviews();
