@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // <--- NEW: Import useCallback
 import { Container, Row, Col, Card, Alert, Spinner, Button, Badge, Tab, Tabs, Dropdown } from 'react-bootstrap';
 import { useHistory } from 'react-router-dom'; // Changed from useNavigate
 import { useToast } from '../context/ToastContext';
@@ -10,21 +10,20 @@ const AdminDashboard = () => {
     const [allUsers, setAllUsers] = useState([]); // State for all users
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null); // For initial page load error
-    // const [message, setMessage] = useState(''); // <--- REMOVED: No longer used, handled by Toast
-    // const [messageType, setMessageType] = useState(''); // <--- REMOVED: No longer used, handled by Toast
+    // const [message, setMessage] = useState(''); // <--- REMOVED (permanently, as it's not used)
+    // const [messageType, setMessageType] = useState(''); // <--- REMOVED (permanently)
 
     const token = localStorage.getItem('token');
     const userRole = localStorage.getItem('userRole');
     const currentUserId = localStorage.getItem('userId');
-    const history = useHistory(); // Changed from useNavigate
+    const history = useHistory();
     const { showToast } = useToast();
 
     // Function to fetch data based on active tab
-    // --- UPDATED: fetchData dependencies fixed by useCallback or adding them ---
-    const fetchData = async () => {
+    // --- FIX: Wrap fetchData in useCallback to stabilize its reference ---
+    const fetchData = useCallback(async () => {
         setLoading(true);
         setError(null);
-        // setMessage(''); // Removed
 
         if (!token || userRole !== 'admin') {
             showToast('Access Denied. You must be logged in as an administrator.', 'danger');
@@ -70,12 +69,12 @@ const AdminDashboard = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [key, token, userRole, history, showToast]); // Dependencies for useCallback
 
     // --- UPDATED: useEffect dependencies to resolve warning ---
     useEffect(() => {
         fetchData();
-    }, [key, token, userRole, history, showToast]); // Added 'history' and 'showToast' as dependencies
+    }, [fetchData]); // Now useEffect depends on the stable fetchData function
 
     // Handle technician verification (Approve/Disapprove)
     const handleTechnicianStatusChange = async (technicianId, statusType) => {
