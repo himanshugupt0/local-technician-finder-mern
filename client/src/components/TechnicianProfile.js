@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom'; // Note: useParams is v6+. If v5 is used, use useRouteMatch. This specific error is not about useParams.
 import { Container, Row, Col, Card, ListGroup, Alert, Spinner, Badge, Form, Button } from 'react-bootstrap';
 import Rating from 'react-rating';
 import { FaStar, FaRegStar } from 'react-icons/fa';
@@ -28,9 +28,9 @@ const TechnicianProfile = () => {
   });
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
-  // --- FIX: reviewMessage and reviewMessageType useState declarations are REMOVED, as they are handled by useToast ---
-  // Make sure their references in JSX are also removed below.
-  // This is the main fix for the current error.
+  // --- FIX: reviewMessage and reviewMessageType useState declarations are REMOVED. ---
+  // This is the main fix for the 'no-undef' error.
+  // Unused variable 'message' (for global alert) has also been removed.
 
   const [hasCompletedBookingWithTech, setHasCompletedBookingWithTech] = useState(false);
 
@@ -413,7 +413,7 @@ const TechnicianProfile = () => {
           <Card className="mt-4">
             <Card.Header as="h4">Reviews ({technician.reviewCount})</Card.Header>
             <Card.Body>
-              {reviewMessage && <Alert variant={reviewMessageType}>{reviewMessage}</Alert>}
+              {/* FIX: reviewMessage and reviewMessageType Alert removed from here */}
 
               {/* Review Submission Form */}
               {canSubmitReview ? (
