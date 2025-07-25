@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react'; // `useState`, `useEffect` removed as they are not directly used in MainLayout, now handled by useAuth
 // --- UPDATED IMPORTS FOR REACT-ROUTER-DOM V5 ---
-import { BrowserRouter as Router, Switch, Route, Link, useHistory } from 'react-router-dom'; // <--- Routes becomes Switch, useNavigate becomes useHistory
+import { BrowserRouter as Router, Switch, Route, Link, useHistory } from 'react-router-dom'; // `Router` is used, so keep it. `Routes` becomes Switch, `useNavigate` becomes `useHistory`
 // --- END UPDATED IMPORTS ---
 import { Navbar, Nav, Container, Button, Card, Row, Col, Spinner } from 'react-bootstrap';
 
@@ -12,17 +12,17 @@ import Login from './Login';
 import TechnicianList from './TechnicianList';
 import TechnicianProfile from './TechnicianProfile';
 import UserBookings from './UserBookings';
-import TechnicianBookings from './TechnicianBookings';
+import TechnicianBookings from './TechnicianBookings'; // This is TechnicianDashboard component
 import AdminDashboard from './AdminDashboard';
 import TechnicianProfileEdit from './TechnicianProfileEdit';
 import Footer from './Footer';
 
 
 const HomePage = () => {
-  const [totalTechnicians, setTotalTechnicians] = useState(null);
-  const [loadingTechCount, setLoadingTechCount] = useState(true);
+  const [totalTechnicians, setTotalTechnicians] = React.useState(null);
+  const [loadingTechCount, setLoadingTechCount] = React.useState(true);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchTechCount = async () => {
       try {
         const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/technicians`);
@@ -122,22 +122,20 @@ const HomePage = () => {
   );
 };
 
-const TechnicianDashboard = () => (
-    <Container className="mt-5 text-center">
-      <h2>Technician Dashboard</h2>
-      <p>Manage your bookings and profile here.</p>
-    </Container>
-  );
+// --- REMOVED: TechnicianDashboard placeholder (as it's an imported component) ---
+// const TechnicianDashboard = () => ( ... );
 
+// --- REMOVED: AdminDashboard placeholder (as it's an imported component) ---
+// const AdminDashboard = () => ( ... );
 
 
 function MainLayout() {
   const { isLoggedIn, userRole, loading: authLoading, logout } = useAuth();
-  const history = useHistory(); // <--- UPDATED: useNavigate becomes useHistory
+  const history = useHistory();
 
   const handleLogout = () => {
     logout();
-    history.push('/login'); // <--- UPDATED: navigate becomes history.push
+    history.push('/login');
   };
 
   return (
@@ -182,18 +180,18 @@ function MainLayout() {
 
       {/* Main Content Area - Routes will render here */}
       <div style={{ flex: 1 }}>
-          <Switch> {/* <--- UPDATED: Routes becomes Switch */}
-            <Route exact path="/" component={HomePage} /> {/* <--- UPDATED: exact path and component prop */}
-            <Route path="/login" component={Login} /> {/* <--- UPDATED: component prop */}
-            <Route path="/register" component={Register} /> {/* <--- UPDATED: component prop */}
-            <Route path="/technicians" component={TechnicianList} /> {/* <--- UPDATED: component prop */}
-            <Route path="/technicians/:id" component={TechnicianProfile} /> {/* <--- UPDATED: component prop */}
+          <Switch> {/* Routes becomes Switch */}
+            <Route exact path="/" component={HomePage} />
+            <Route path="/login" component={Login} />
+            <Route path="/register" component={Register} />
+            <Route path="/technicians" component={TechnicianList} />
+            <Route path="/technicians/:id" component={TechnicianProfile} />
             {/* Dashboard Routes */}
-            <Route path="/user-dashboard" component={UserBookings} /> {/* <--- UPDATED: component prop */}
-            <Route path="/technician-dashboard" component={TechnicianBookings} /> {/* <--- UPDATED: component prop */}
-            <Route path="/admin-dashboard" component={AdminDashboard} /> {/* <--- UPDATED: component prop */}
-            <Route path="/technician-profile-edit" component={TechnicianProfileEdit} /> {/* <--- UPDATED: component prop */}
-          </Switch> {/* <--- UPDATED: Routes becomes Switch */}
+            <Route path="/user-dashboard" component={UserBookings} />
+            <Route path="/technician-dashboard" component={TechnicianBookings} />
+            <Route path="/admin-dashboard" component={AdminDashboard} />
+            <Route path="/technician-profile-edit" component={TechnicianProfileEdit} />
+          </Switch>
       </div>
 
       {/* Footer is rendered outside of Routes, so it appears on every page */}

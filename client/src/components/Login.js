@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Form, Button, Container, Row, Col, Alert, Spinner } from 'react-bootstrap';
-// --- UPDATED IMPORTS FOR REACT-ROUTER-DOM V5 ---
-import { useHistory } from 'react-router-dom'; // <--- useNavigate becomes useHistory
-// --- END UPDATED IMPORTS ---
+// --- UPDATED: Remove Alert as it's no longer used (replaced by Toast) ---
+import { Form, Button, Container, Row, Col, Spinner } from 'react-bootstrap'; // <--- Removed Alert
+import { useHistory } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -13,7 +12,7 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  const history = useHistory(); // <--- UPDATED: useNavigate becomes useHistory
+  const history = useHistory();
   const { login } = useAuth();
   const { showToast } = useToast();
 
@@ -41,11 +40,11 @@ const Login = () => {
         login(data.token, data.role, data.userId);
 
         if (data.role === 'admin') {
-          setTimeout(() => history.push('/admin-dashboard'), 1000); // <--- UPDATED: navigate becomes history.push
+          setTimeout(() => history.push('/admin-dashboard'), 1000);
         } else if (data.role === 'technician') {
-          setTimeout(() => history.push('/technician-dashboard'), 1000); // <--- UPDATED: navigate becomes history.push
+          setTimeout(() => history.push('/technician-dashboard'), 1000);
         } else {
-          setTimeout(() => history.push('/user-dashboard'), 1000); // <--- UPDATED: navigate becomes history.push
+          setTimeout(() => history.push('/user-dashboard'), 1000);
         }
 
       } else {

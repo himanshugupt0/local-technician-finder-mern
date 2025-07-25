@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Form, Button, Container, Row, Col, Alert, Spinner } from 'react-bootstrap';
-// --- UPDATED IMPORTS FOR REACT-ROUTER-DOM V5 ---
-import { useHistory } from 'react-router-dom'; // <--- useNavigate becomes useHistory
-// --- END UPDATED IMPORTS ---
+// --- UPDATED: Remove Alert as it's no longer used (replaced by Toast) ---
+import { Form, Button, Container, Row, Col, Spinner } from 'react-bootstrap'; // <--- Removed Alert
+import { useHistory } from 'react-router-dom'; // Changed from useNavigate
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -17,7 +16,7 @@ const Register = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  const history = useHistory(); // <--- UPDATED: useNavigate becomes useHistory
+  const history = useHistory(); // Changed from useNavigate
   const { login } = useAuth();
   const { showToast } = useToast();
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // <--- NEW: Import useCallback
 import { useParams, Link } from 'react-router-dom';
 import { Container, Row, Col, Card, ListGroup, Alert, Spinner, Badge, Form, Button } from 'react-bootstrap';
 import Rating from 'react-rating';
@@ -11,8 +11,8 @@ const TechnicianProfile = () => {
   const { id } = useParams();
   const [technician, setTechnician] = useState(null);
   const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true); // Manages initial page load
+  const [error, setError] = useState(null); // Keep this error for initial page load failure
 
   const [bookingFormData, setBookingFormData] = useState({
     bookingDate: '',
@@ -21,16 +21,12 @@ const TechnicianProfile = () => {
     notes: ''
   });
   const [bookingLoading, setBookingLoading] = useState(false);
-  // Removed bookingMessage and bookingMessageType useState declarations. Their references in JSX will also be removed.
 
   const [reviewFormData, setReviewFormData] = useState({
     rating: 0,
     comment: ''
   });
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
-  // Removed reviewMessage and reviewMessageType useState declarations. Their references in JSX will also be removed.
-
-  // Removed global message and messageType useState declarations.
 
   const [hasCompletedBookingWithTech, setHasCompletedBookingWithTech] = useState(false);
 
@@ -40,11 +36,10 @@ const TechnicianProfile = () => {
   const userId = localStorage.getItem('userId');
   const { showToast } = useToast();
 
-  // Function to fetch technician details, reviews, AND user's bookings
-  const fetchTechnicianAndReviews = async () => {
+  // --- FIX: Wrap fetchTechnicianAndReviews in useCallback to stabilize its reference ---
+  const fetchTechnicianAndReviews = useCallback(async () => {
     setLoading(true);
     setError(null);
-    // setMessage(''); // Removed as 'message' state is removed
     setHasCompletedBookingWithTech(false);
 
     try {
@@ -93,13 +88,12 @@ const TechnicianProfile = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, userRole, token]); // Dependencies for useCallback
 
+  // --- UPDATED: useEffect depends on the stable fetchTechnicianAndReviews function ---
   useEffect(() => {
-    if (id) {
-      fetchTechnicianAndReviews();
-    }
-  }, [id, userRole, token]);
+    fetchTechnicianAndReviews();
+  }, [fetchTechnicianAndReviews]);
 
   const handleBookingChange = e => {
     setBookingFormData({ ...bookingFormData, [e.target.name]: e.target.value });
@@ -107,7 +101,6 @@ const TechnicianProfile = () => {
 
   const handleBookingSubmit = async e => {
     e.preventDefault();
-    // Removed setBookingMessage('');
     setBookingLoading(true);
 
     if (!token) {
@@ -169,7 +162,6 @@ const TechnicianProfile = () => {
 
   const handleReviewSubmit = async e => {
     e.preventDefault();
-    // Removed setReviewMessage('');
     setReviewSubmitting(true);
 
     if (!token) {
@@ -332,7 +324,6 @@ const TechnicianProfile = () => {
             <Card className="mt-4">
               <Card.Header as="h4">Book This Technician</Card.Header>
               <Card.Body>
-                {/* Replaced bookingMessage Alert */}
                 <Form onSubmit={handleBookingSubmit}>
                   <Form.Group className="mb-3" controlId="serviceSelect">
                     <Form.Label>Select Service</Form.Label>
@@ -420,7 +411,7 @@ const TechnicianProfile = () => {
           <Card className="mt-4">
             <Card.Header as="h4">Reviews ({technician.reviewCount})</Card.Header>
             <Card.Body>
-              {/* Replaced reviewMessage Alert */}
+              {reviewMessage && <Alert variant={reviewMessageType}>{reviewMessage}</Alert>}
 
               {/* Review Submission Form */}
               {canSubmitReview ? (

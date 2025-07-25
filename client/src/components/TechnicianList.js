@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // <--- NEW: Import useCallback
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import useDebounce from '../hooks/useDebounce';
@@ -9,8 +9,8 @@ const TechnicianList = () => {
   const [error, setError] = useState(null);
   const [selectedService, setSelectedService] = useState('');
 
-  const [searchTermLocation, setSearchTermLocation] = useState(''); // Immediate input for location
-  const [searchTermServiceArea, setSearchTermServiceArea] = useState(''); // Immediate input for service area
+  const [searchTermLocation, setSearchTermLocation] = useState('');
+  const [searchTermServiceArea, setSearchTermServiceArea] = useState('');
 
   const debouncedSearchLocation = useDebounce(searchTermLocation, 500);
   const debouncedSearchServiceArea = useDebounce(searchTermServiceArea, 500);
@@ -24,7 +24,8 @@ const TechnicianList = () => {
     'Car Repair', 'Motorcycle Repair', 'Vehicle AC Repair', 'Other'
   ];
 
-  const fetchTechnicians = async () => {
+  // --- FIX: Wrap fetchTechnicians in useCallback to stabilize its reference ---
+  const fetchTechnicians = useCallback(async () => {
     setLoading(true);
     setError(null);
     setMessage('');
@@ -35,10 +36,10 @@ const TechnicianList = () => {
     if (selectedService) {
       params.append('service', selectedService);
     }
-    if (debouncedSearchLocation) { // Use debounced value for API call
+    if (debouncedSearchLocation) {
       params.append('location', debouncedSearchLocation);
     }
-    if (debouncedSearchServiceArea) { // Use debounced value for API call
+    if (debouncedSearchServiceArea) {
       params.append('serviceArea', debouncedSearchServiceArea);
     }
 
@@ -74,11 +75,12 @@ const TechnicianList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedService, debouncedSearchLocation, debouncedSearchServiceArea]); // Dependencies for useCallback
 
+  // --- UPDATED: useEffect depends on the stable fetchTechnicians function ---
   useEffect(() => {
     fetchTechnicians();
-  }, [selectedService, debouncedSearchLocation, debouncedSearchServiceArea]);
+  }, [fetchTechnicians]);
 
   const handleSearchSubmit = (e) => {
       e.preventDefault();
@@ -129,8 +131,8 @@ const TechnicianList = () => {
               <Form.Control
                 type="text"
                 placeholder="e.g., Ludhiana"
-                value={searchTermLocation} // <--- CORRECTED: Use searchTermLocation
-                onChange={(e) => setSearchTermLocation(e.target.value)} // <--- CORRECTED: Use setSearchTermLocation
+                value={searchTermLocation}
+                onChange={(e) => setSearchTermLocation(e.target.value)}
               />
             </Form.Group>
           </Col>
@@ -140,8 +142,8 @@ const TechnicianList = () => {
               <Form.Control
                 type="text"
                 placeholder="e.g., Model Town"
-                value={searchTermServiceArea} // <--- CORRECTED: Use searchTermServiceArea
-                onChange={(e) => setSearchTermServiceArea(e.target.value)} // <--- CORRECTED: Use setSearchTermServiceArea
+                value={searchTermServiceArea}
+                onChange={(e) => setSearchTermServiceArea(e.target.value)}
               />
             </Form.Group>
           </Col>
