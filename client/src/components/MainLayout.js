@@ -1,10 +1,10 @@
-// --- All necessary imports at the very top ---
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { Navbar, Nav, Container, Button, Card, Row, Col, Spinner } from 'react-bootstrap'; // <--- UPDATED: Spinner added here
-// Make sure you have 'bootstrap/dist/css/bootstrap.min.css' imported in src/index.js as per Step 12.2
+// --- UPDATED IMPORTS FOR REACT-ROUTER-DOM V5 ---
+import { BrowserRouter as Router, Switch, Route, Link, useHistory } from 'react-router-dom'; // <--- Routes becomes Switch, useNavigate becomes useHistory
+// --- END UPDATED IMPORTS ---
+import { Navbar, Nav, Container, Button, Card, Row, Col, Spinner } from 'react-bootstrap';
 
-import { useAuth } from '../context/AuthContext'; // Import useAuth hook
+import { useAuth } from '../context/AuthContext';
 
 // Import ALL custom components used in this file
 import Register from './Register';
@@ -14,12 +14,10 @@ import TechnicianProfile from './TechnicianProfile';
 import UserBookings from './UserBookings';
 import TechnicianBookings from './TechnicianBookings';
 import AdminDashboard from './AdminDashboard';
-import TechnicianProfileEdit from './TechnicianProfileEdit'; // <--- Ensure this is imported
-import Footer from './Footer'; // <--- Ensure this is imported
-// --- END of Imports ---
+import TechnicianProfileEdit from './TechnicianProfileEdit';
+import Footer from './Footer';
 
 
-// --- HomePage Component ---
 const HomePage = () => {
   const [totalTechnicians, setTotalTechnicians] = useState(null);
   const [loadingTechCount, setLoadingTechCount] = useState(true);
@@ -27,7 +25,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchTechCount = async () => {
       try {
-        const res = await fetch('/api/technicians');
+        const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/technicians`);
         if (res.ok) {
           const data = await res.json();
           setTotalTechnicians(data.length);
@@ -123,22 +121,31 @@ const HomePage = () => {
     </Container>
   );
 };
-// --- END of HomePage Component ---
 
-
-// --- Placeholder Dashboard Components (These are defined as separate files now, no longer inline) ---
 const TechnicianDashboard = () => (
     <Container className="mt-5 text-center">
       <h2>Technician Dashboard</h2>
       <p>Manage your bookings and profile here.</p>
     </Container>
   );
-// The AdminDashboard placeholder is also removed as it's a separate component.
+
+
+const AdminDashboard = () => (
+    <Container className="mt-5 text-center">
+      <h2>Admin Dashboard</h2>
+      <p>Manage users, verify technicians, etc. here.</p>
+    </Container>
+  );
 
 
 function MainLayout() {
   const { isLoggedIn, userRole, loading: authLoading, logout } = useAuth();
-  const navigate = useNavigate();
+  const history = useHistory(); // <--- UPDATED: useNavigate becomes useHistory
+
+  const handleLogout = () => {
+    logout();
+    history.push('/login'); // <--- UPDATED: navigate becomes history.push
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -167,7 +174,7 @@ function MainLayout() {
                   <Spinner animation="border" size="sm" variant="light" />
               ) : (
                   isLoggedIn ? (
-                      <Button variant="outline-light" onClick={logout}>Logout</Button>
+                      <Button variant="outline-light" onClick={handleLogout}>Logout</Button>
                   ) : (
                       <>
                           <Nav.Link as={Link} to="/login">Login</Nav.Link>
@@ -182,18 +189,18 @@ function MainLayout() {
 
       {/* Main Content Area - Routes will render here */}
       <div style={{ flex: 1 }}>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/technicians" element={<TechnicianList />} />
-            <Route path="/technicians/:id" element={<TechnicianProfile />} />
+          <Switch> {/* <--- UPDATED: Routes becomes Switch */}
+            <Route exact path="/" component={HomePage} /> {/* <--- UPDATED: exact path and component prop */}
+            <Route path="/login" component={Login} /> {/* <--- UPDATED: component prop */}
+            <Route path="/register" component={Register} /> {/* <--- UPDATED: component prop */}
+            <Route path="/technicians" component={TechnicianList} /> {/* <--- UPDATED: component prop */}
+            <Route path="/technicians/:id" component={TechnicianProfile} /> {/* <--- UPDATED: component prop */}
             {/* Dashboard Routes */}
-            <Route path="/user-dashboard" element={<UserBookings />} />
-            <Route path="/technician-dashboard" element={<TechnicianBookings />} />
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
-            <Route path="/technician-profile-edit" element={<TechnicianProfileEdit />} />
-          </Routes>
+            <Route path="/user-dashboard" component={UserBookings} /> {/* <--- UPDATED: component prop */}
+            <Route path="/technician-dashboard" component={TechnicianBookings} /> {/* <--- UPDATED: component prop */}
+            <Route path="/admin-dashboard" component={AdminDashboard} /> {/* <--- UPDATED: component prop */}
+            <Route path="/technician-profile-edit" component={TechnicianProfileEdit} /> {/* <--- UPDATED: component prop */}
+          </Switch> {/* <--- UPDATED: Routes becomes Switch */}
       </div>
 
       {/* Footer is rendered outside of Routes, so it appears on every page */}

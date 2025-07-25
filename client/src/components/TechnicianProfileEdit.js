@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Container, Row, Col, Alert, Spinner } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+// --- UPDATED IMPORTS FOR REACT-ROUTER-DOM V5 ---
+import { useHistory } from 'react-router-dom'; // <--- useNavigate becomes useHistory
+// --- END UPDATED IMPORTS ---
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext'; // <--- NEW IMPORT
+import { useToast } from '../context/ToastContext';
 
 const TechnicianProfileEdit = () => {
   const [formData, setFormData] = useState({
@@ -16,17 +18,15 @@ const TechnicianProfileEdit = () => {
     isAvailable: true
   });
   const [dataLoading, setDataLoading] = useState(true);
-  // Removed error state as it will be handled by toast/conditional rendering
-  // const [error, setError] = useState(null);
-  // Removed message and messageType states as they will be handled by toast
-  // const [message, setMessage] = useState('');
-  // const [messageType, setMessageType] = useState('');
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('');
   const [formSubmitting, setFormSubmitting] = useState(false);
 
   const { userRole, loading: authLoading } = useAuth();
   const componentToken = localStorage.getItem('token');
-  const navigate = useNavigate();
-  const { showToast } = useToast(); // <--- Use the showToast function
+  const history = useHistory(); // <--- UPDATED: useNavigate becomes useHistory
+  const { showToast } = useToast();
 
   const serviceTypes = [
     'Home Appliance Repair', 'Plumbing', 'Electrical Services',
@@ -37,20 +37,19 @@ const TechnicianProfileEdit = () => {
   useEffect(() => {
     const fetchTechnicianProfile = async () => {
       setDataLoading(true);
-      // Removed setError(null); setMessage('');
+      setError(null);
+      setMessage('');
 
       if (!componentToken || userRole !== 'technician') {
         return;
       }
 
       try {
-        // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
         const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/profile/technician/me`, {
           headers: {
             'x-auth-token': componentToken,
           },
         });
-        // --- END UPDATED FETCH CALL ---
         const data = await res.json();
 
         if (res.ok) {
@@ -65,11 +64,11 @@ const TechnicianProfileEdit = () => {
             isAvailable: data.isAvailable !== undefined ? data.isAvailable : true,
           });
         } else {
-          showToast(data.msg || 'Failed to fetch technician profile data.', 'danger'); // <--- UPDATED
+          showToast(data.msg || 'Failed to fetch technician profile data.', 'danger');
         }
       } catch (err) {
         console.error('Frontend fetch tech profile for edit error:', err);
-        showToast('Could not connect to the server or retrieve your profile data.', 'danger'); // <--- UPDATED
+        showToast('Could not connect to the server or retrieve your profile data.', 'danger');
       } finally {
         setDataLoading(false);
       }
@@ -79,11 +78,9 @@ const TechnicianProfileEdit = () => {
       fetchTechnicianProfile();
     } else if (!authLoading && (!componentToken || userRole !== 'technician')) {
       setDataLoading(false);
-      // Error is now handled by showToast, but still keeping this path for conditional rendering
-      // showToast("Access Denied. Please log in as a technician to edit your profile.", 'danger'); // Optional: show toast here
+      setError('Access Denied. Please log in as a technician to edit your profile.');
     }
-  }, [authLoading, componentToken, userRole, navigate, showToast]);
-
+  }, [authLoading, componentToken, userRole, history, showToast]); // <--- UPDATED: navigate becomes history
 
   const onChange = e => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -101,7 +98,7 @@ const TechnicianProfileEdit = () => {
 
   const onSubmit = async e => {
     e.preventDefault();
-    // Removed setMessage('');
+    setMessage('');
     setFormSubmitting(true);
 
     if (formData.servicesOffered.length === 0) {
@@ -122,7 +119,6 @@ const TechnicianProfileEdit = () => {
     }
 
     try {
-      // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
       const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/profile/technician`, {
         method: 'POST',
         headers: {
@@ -134,7 +130,6 @@ const TechnicianProfileEdit = () => {
           serviceAreas: formData.serviceAreas.split(',').map(s => s.trim()).filter(s => s.length > 0)
         }),
       });
-      // --- END UPDATED FETCH CALL ---
 
       const data = await res.json();
 
@@ -151,8 +146,6 @@ const TechnicianProfileEdit = () => {
     }
   };
 
-
-  // --- Conditional Rendering for different states ---
 
   if (authLoading) {
     return (
@@ -172,7 +165,7 @@ const TechnicianProfileEdit = () => {
           Access Denied. Please log in as a technician to edit your profile.
         </Alert>
         <div className="text-center mt-3">
-          <Button onClick={() => navigate('/login')}>Go to Login</Button>
+          <Button onClick={() => history.push('/login')}>Go to Login</Button> {/* <--- UPDATED: navigate becomes history.push */}
         </div>
       </Container>
     );
@@ -189,8 +182,13 @@ const TechnicianProfileEdit = () => {
     );
   }
 
-  // Replaced 'if (error)' block because errors now trigger toasts
-  // If a fetch error occurs, a toast will show, but the form will still try to render with its current data.
+  if (error) {
+      return (
+          <Container className="mt-5">
+              <Alert variant="danger">{error}</Alert>
+          </Container>
+      );
+  }
 
   return (
     <Container className="mt-5">

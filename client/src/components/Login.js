@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Alert, Spinner } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+// --- UPDATED IMPORTS FOR REACT-ROUTER-DOM V5 ---
+import { useHistory } from 'react-router-dom'; // <--- useNavigate becomes useHistory
+// --- END UPDATED IMPORTS ---
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -11,7 +13,7 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate();
+  const history = useHistory(); // <--- UPDATED: useNavigate becomes useHistory
   const { login } = useAuth();
   const { showToast } = useToast();
 
@@ -24,7 +26,6 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // --- UPDATED: Prepend process.env.REACT_APP_API_BASE_URL to the fetch URL ---
       const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
@@ -40,11 +41,11 @@ const Login = () => {
         login(data.token, data.role, data.userId);
 
         if (data.role === 'admin') {
-          setTimeout(() => navigate('/admin-dashboard'), 1000);
+          setTimeout(() => history.push('/admin-dashboard'), 1000); // <--- UPDATED: navigate becomes history.push
         } else if (data.role === 'technician') {
-          setTimeout(() => navigate('/technician-dashboard'), 1000);
+          setTimeout(() => history.push('/technician-dashboard'), 1000); // <--- UPDATED: navigate becomes history.push
         } else {
-          setTimeout(() => navigate('/user-dashboard'), 1000);
+          setTimeout(() => history.push('/user-dashboard'), 1000); // <--- UPDATED: navigate becomes history.push
         }
 
       } else {
