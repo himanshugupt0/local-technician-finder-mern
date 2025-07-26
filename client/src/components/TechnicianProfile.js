@@ -36,6 +36,7 @@ const TechnicianProfile = () => {
   const userId = localStorage.getItem('userId');
   const { showToast } = useToast();
 
+  // --- FIX: Removed process.env.REACT_APP_API_BASE_URL from useCallback dependencies ---
   const fetchTechnicianAndReviews = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -87,7 +88,7 @@ const TechnicianProfile = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, userRole, token, process.env.REACT_APP_API_BASE_URL]);
+  }, [id, userRole, token]); // Removed process.env.REACT_APP_API_BASE_URL from dependencies
 
   useEffect(() => {
     fetchTechnicianAndReviews();
@@ -409,7 +410,7 @@ const TechnicianProfile = () => {
           <Card className="mt-4">
             <Card.Header as="h4">Reviews ({technician.reviewCount})</Card.Header>
             <Card.Body>
-              {/* FIX: reviewMessage and reviewMessageType Alert removed from here */}
+              {/* --- FIX: reviewMessage Alert removed from here --- */}
 
               {/* Review Submission Form */}
               {canSubmitReview ? (
