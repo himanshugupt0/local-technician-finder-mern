@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom'; // Note: useParams is v6+. If v5 is used, use useRouteMatch. This specific error is not about useParams.
+import { useParams, Link } from 'react-router-dom';
 import { Container, Row, Col, Card, ListGroup, Alert, Spinner, Badge, Form, Button } from 'react-bootstrap';
 import Rating from 'react-rating';
 import { FaStar, FaRegStar } from 'react-icons/fa';
@@ -27,10 +27,6 @@ const TechnicianProfile = () => {
     comment: ''
   });
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
-
-  // --- FIX: reviewMessage and reviewMessageType useState declarations are REMOVED. ---
-  // This is the main fix for the 'no-undef' error.
-  // Unused variable 'message' (for global alert) has also been removed.
 
   const [hasCompletedBookingWithTech, setHasCompletedBookingWithTech] = useState(false);
 
