@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react'; // <--- NEW: Import useCallback
-import { Container, Row, Col, Card, Alert, Spinner, ListGroup, Badge, Button } from 'react-bootstrap';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Container, Row, Col, Card, Alert, Spinner, ListGroup, Badge /* Removed Button */ } from 'react-bootstrap'; // <--- UPDATED: Removed Button from import
 import { Link } from 'react-router-dom'; // Import Link for navigation to tech profile
 
 const UserBookings = () => {
@@ -12,7 +12,6 @@ const UserBookings = () => {
   const userRole = localStorage.getItem('userRole');
   const userId = localStorage.getItem('userId');
 
-  // --- FIX: Wrap fetchUserBookingsAndReviews in useCallback to stabilize its reference ---
   const fetchUserBookingsAndReviews = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -45,7 +44,7 @@ const UserBookings = () => {
         const reviewsForTechRes = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/reviews/${techId}`);
         const reviewsForTechData = await reviewsForTechRes.json();
         if (reviewsForTechRes.ok) {
-          reviewsForTechData.filter(r => r.user && r.user._id === userId).forEach(r => reviewsByThisUser.push(r)); // Added r.user && to prevent error if user is null
+          reviewsForTechData.filter(r => r.user && r.user._id === userId).forEach(r => reviewsByThisUser.push(r));
         }
       }
 
@@ -64,9 +63,8 @@ const UserBookings = () => {
     } finally {
       setLoading(false);
     }
-  }, [token, userRole, userId]); // Dependencies for useCallback
+  }, [token, userRole, userId]);
 
-  // --- UPDATED: useEffect depends on the stable fetchUserBookingsAndReviews function ---
   useEffect(() => {
     fetchUserBookingsAndReviews();
   }, [fetchUserBookingsAndReviews]);
