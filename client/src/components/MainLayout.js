@@ -182,7 +182,7 @@ function MainLayout() {
             <Route exact path="/" component={HomePage} />
             <Route path="/login" component={Login} />
             <Route path="/register" component={Register} />
-            <Route path="/technicians" component={TechnicianList} />
+            <Route exact path="/technicians" component={TechnicianList} />
             <Route path="/technicians/:id" component={TechnicianProfile} />
             {/* Dashboard Routes */}
             <Route path="/user-dashboard" component={UserBookings} />
